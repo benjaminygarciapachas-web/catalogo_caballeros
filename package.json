@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "CATALOGO CABALLEROS - Fullstack Application",
   "scripts": {
+    "build": "cd backend && npm install && node seed.mjs",
     "start": "node backend/index.js",
     "seed": "node backend/seed.mjs"
   }

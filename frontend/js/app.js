@@ -353,14 +353,36 @@ function renderProductsGrid(products) {
   if (!grid) return;
 
   if (products.length === 0) {
-    grid.innerHTML = `
-      <div class="empty-catalog-state">
-        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <h3 style="margin-top: 12px; font-weight: 700;">No se encontraron prendas con los filtros actuales</h3>
-        <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 4px;">Intenta buscar por otro término o restablece los filtros de categoría.</p>
-        <button class="btn btn-soft-celeste" style="margin-top: 16px;" onclick="resetAllFilters()">Restablecer Catálogo</button>
-      </div>
-    `;
+    const isAdmin = AppState.currentUser && AppState.currentUser.role === 'admin';
+    const isFilterActive = AppState.activeCategory !== 'all' || AppState.activeSubcategorySlug !== null || Boolean(AppState.searchQuery);
+
+    if (isFilterActive && AppState.products.length > 0) {
+      grid.innerHTML = `
+        <div class="empty-catalog-state">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <h3 style="margin-top: 12px; font-weight: 700;">No se encontraron prendas con los filtros actuales</h3>
+          <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 4px;">Intenta con otra subcategoría o restablece los filtros.</p>
+          <button class="btn btn-soft-celeste" style="margin-top: 16px;" onclick="resetAllFilters()">Restablecer Catálogo</button>
+        </div>
+      `;
+    } else {
+      grid.innerHTML = `
+        <div class="empty-catalog-state">
+          <div style="width: 56px; height: 56px; margin: 0 auto 14px; background: var(--celeste-subtle); color: var(--celeste-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.38 3.46L16 2a4 4 0 01-8 0L3.62 3.46a2 2 0 00-1.34 2.23l.58 3.47a1 1 0 00.99.84H6v10a2 2 0 002 2h8a2 2 0 002-2V10h2.15a1 1 0 00.99-.84l.58-3.47a2 2 0 00-1.34-2.23z"/></svg>
+          </div>
+          <h3 style="margin-top: 6px; font-weight: 800; font-size: 1.25rem;">Catálogo listo y disponible</h3>
+          <p style="color: var(--text-muted); font-size: 0.92rem; max-width: 480px; margin: 8px auto 18px;">
+            ${isAdmin 
+              ? 'Todas las fotos de muestra han sido eliminadas. Puedes comenzar a subir tus propias fotografías y prendas ahora mismo.' 
+              : 'El catálogo está preparado para recibir la nueva colección de prendas exclusivas. Ingresa como Administrador para subir tus fotos.'}
+          </p>
+          ${isAdmin 
+            ? '<button class="btn btn-fucsia" onclick="AdminModule.openCreateModal()">➕ Agregar Primer Producto</button>' 
+            : '<button class="btn btn-azul" onclick="openLoginModal()">Iniciar Sesión (PATTYps)</button>'}
+        </div>
+      `;
+    }
     return;
   }
 

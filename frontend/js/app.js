@@ -507,17 +507,19 @@ async function handleLoginSubmit(e) {
   const usernameInput = document.getElementById('loginUsernameInput');
   const passwordInput = document.getElementById('loginPasswordInput');
   const tabLoginAdmin = document.getElementById('tabLoginAdmin');
-  let username = usernameInput.value.trim();
-  const password = passwordInput.value.trim();
+  const submitBtn = document.getElementById('submitLoginBtnText') || document.getElementById('btnSubmitLogin');
+
+  let username = (usernameInput ? usernameInput.value : '').trim();
+  const password = (passwordInput ? passwordInput.value : '').trim();
 
   // Si está en Modo Administrador y el usuario está vacío, asignar PATTYps automáticamente
   if (tabLoginAdmin && tabLoginAdmin.classList.contains('active') && !username) {
     username = 'PATTYps';
-    usernameInput.value = 'PATTYps';
+    if (usernameInput) usernameInput.value = 'PATTYps';
   }
 
-  const originalText = submitBtn.textContent;
-  submitBtn.textContent = 'Verificando...';
+  const originalText = submitBtn ? submitBtn.textContent : 'Ingresar al Catálogo';
+  if (submitBtn) submitBtn.textContent = 'Verificando...';
 
   try {
     const response = await fetch('/api/auth/login', {
@@ -561,7 +563,7 @@ async function handleLoginSubmit(e) {
     console.error('Error de login:', err);
     alert(err.message || 'Error al iniciar sesión.');
   } finally {
-    submitBtn.textContent = originalText;
+    if (submitBtn) submitBtn.textContent = originalText;
   }
 }
 

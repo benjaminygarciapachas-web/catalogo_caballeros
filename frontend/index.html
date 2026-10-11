@@ -250,11 +250,10 @@
           <input 
             type="text" 
             id="loginUsernameInput" 
-            placeholder="Ejemplo: Carlos, Roberto o PATTYps" 
-            required
+            placeholder="Introduce tu usuario..." 
             autocomplete="username"
           >
-          <span class="field-hint" id="usernameHint">Clientes pueden ingresar cualquier nombre.</span>
+          <span class="field-hint" id="usernameHint">Ingresa tu nombre o usuario.</span>
         </div>
 
         <div class="form-group" id="passwordGroup">
@@ -262,24 +261,24 @@
           <input 
             type="password" 
             id="loginPasswordInput" 
-            placeholder="Introduce contraseña..." 
+            placeholder="Introduce tu contraseña..." 
             autocomplete="current-password"
           >
-          <span class="field-hint" id="passwordHint">Opcional para clientes. Obligatoria para Admin.</span>
+          <span class="field-hint" id="passwordHint">Requerida para Administrador (Opcional para Clientes).</span>
         </div>
 
-        <!-- Banner Informativo de Roles Estrictos -->
+        <!-- Banner Informativo -->
         <div class="role-notice-box" id="roleNoticeBox">
-          <div class="notice-icon">ℹ️</div>
+          <div class="notice-icon">🔒</div>
           <div class="notice-text">
-            <strong>Seguridad estricta:</strong> Para rol Admin las credenciales son <code>PATTYps</code>. Si ingresas otros datos, el sistema te asignará de forma segura el <strong>Rol Cliente</strong>.
+            <strong>Acceso Administrador:</strong> Selecciona la pestaña <em>Modo Administrador</em> para gestionar el catálogo.
           </div>
         </div>
 
         <!-- Botón para rellenar rápido credenciales de Admin en pruebas -->
         <div class="quick-admin-fill">
           <button type="button" class="btn-link-action" id="btnFillAdminCredentials">
-            Rellenar credenciales de Administrador (PATTYps)
+            🔑 Autocompletar datos de Administrador
           </button>
         </div>
 

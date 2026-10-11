@@ -165,17 +165,23 @@ function initEventListeners() {
     tabLoginCliente.addEventListener('click', () => {
       tabLoginCliente.classList.add('active');
       tabLoginAdmin.classList.remove('active');
-      usernameInput.placeholder = 'Ejemplo: Carlos, Roberto o tu nombre';
+      usernameInput.placeholder = 'Tu nombre de usuario';
+      if (usernameInput.value === 'PATTYps') {
+        usernameInput.value = '';
+      }
     });
 
     tabLoginAdmin.addEventListener('click', () => {
       tabLoginAdmin.classList.add('active');
       tabLoginCliente.classList.remove('active');
-      usernameInput.placeholder = 'Usuario de Administrador (PATTYps)';
+      usernameInput.placeholder = 'Usuario de Administrador';
+      // Autocompletar el campo con PATTYps para que nunca quede vacío ni confunda
+      usernameInput.value = 'PATTYps';
+      if (passwordInput) passwordInput.focus();
     });
   }
 
-  // Botón para autorrellenar credenciales del Admin PATTYps
+  // Botón para autorrellenar credenciales del Admin
   const btnFillAdmin = document.getElementById('btnFillAdminCredentials');
   if (btnFillAdmin) {
     btnFillAdmin.addEventListener('click', () => {
@@ -183,6 +189,7 @@ function initEventListeners() {
       passwordInput.value = 'PATTYpschincha452416';
       tabLoginAdmin.classList.add('active');
       tabLoginCliente.classList.remove('active');
+      usernameInput.placeholder = 'Usuario de Administrador';
     });
   }
 
@@ -499,10 +506,15 @@ async function handleLoginSubmit(e) {
 
   const usernameInput = document.getElementById('loginUsernameInput');
   const passwordInput = document.getElementById('loginPasswordInput');
-  const submitBtn = document.getElementById('submitLoginBtnText');
-
-  const username = usernameInput.value.trim();
+  const tabLoginAdmin = document.getElementById('tabLoginAdmin');
+  let username = usernameInput.value.trim();
   const password = passwordInput.value.trim();
+
+  // Si está en Modo Administrador y el usuario está vacío, asignar PATTYps automáticamente
+  if (tabLoginAdmin && tabLoginAdmin.classList.contains('active') && !username) {
+    username = 'PATTYps';
+    usernameInput.value = 'PATTYps';
+  }
 
   const originalText = submitBtn.textContent;
   submitBtn.textContent = 'Verificando...';

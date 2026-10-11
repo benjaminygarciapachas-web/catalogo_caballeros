@@ -22,16 +22,17 @@ const AuthController = {
       let finalUsername = username;
 
       // REGLA ESTRICTA DE ROL ADMIN:
-      // "Rol Admin: Obligatoriamente debe ingresar con el nombre exacto 'PATTYps' y la contraseña exacta 'PATTYpschincha452416'.
-      // Si introduce cualquier otro dato, el sistema por seguridad lo considera automáticamente como Rol Cliente."
-      if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+      // Nombre PATTYps (insensible a mayúsculas/minúsculas) y clave exacta PATTYpschincha452416
+      const isMatchAdminUser = username.toLowerCase() === ADMIN_USERNAME.toLowerCase();
+      const isMatchAdminPass = password === ADMIN_PASSWORD;
+
+      if (isMatchAdminUser && isMatchAdminPass) {
         assignedRole = 'admin';
         finalUsername = ADMIN_USERNAME;
       } else {
         // Por seguridad, cualquier otra combinación se cataloga automáticamente como Rol Cliente
         assignedRole = 'cliente';
-        // Si intentó ponerse el nombre del admin pero con clave incorrecta, proteger identidad
-        if (username === ADMIN_USERNAME && password !== ADMIN_PASSWORD) {
+        if (isMatchAdminUser && !isMatchAdminPass) {
           finalUsername = `Cliente_${ADMIN_USERNAME}_invitado`;
         }
       }

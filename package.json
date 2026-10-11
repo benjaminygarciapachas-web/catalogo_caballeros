@@ -1,0 +1,9 @@
+{
+  "name": "catalogo-caballeros",
+  "version": "1.0.0",
+  "description": "CATALOGO CABALLEROS - Fullstack Application",
+  "scripts": {
+    "start": "node backend/index.js",
+    "seed": "node backend/seed.mjs"
+  }
+}

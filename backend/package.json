@@ -4,6 +4,7 @@
   "description": "Backend API y sincronización en tiempo real para CATALOGO CABALLEROS",
   "main": "index.js",
   "type": "commonjs",
+  "license": "MIT",
   "scripts": {
     "start": "node index.js",
     "seed": "node seed.mjs"

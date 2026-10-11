@@ -118,6 +118,9 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(FRONTEND_DIR, 'index.html'));
 });
 
+const ADMIN_USER_LOG = process.env.ADMIN_USER || 'PATTYps';
+const ADMIN_PASS_LOG = process.env.ADMIN_PASS || 'PATTYpschincha452416';
+
 let currentPort = Number(PORT);
 
 server.on('error', (err) => {
@@ -125,18 +128,18 @@ server.on('error', (err) => {
     console.warn(`⚠️ Puerto ${currentPort} ocupado. Reintentando en puerto ${currentPort + 1}...`);
     currentPort += 1;
     setTimeout(() => {
-      server.listen(currentPort);
+      server.listen(currentPort, '0.0.0.0');
     }, 200);
   } else {
     console.error('💥 Error del servidor HTTP:', err);
   }
 });
 
-server.listen(currentPort, () => {
+server.listen(currentPort, '0.0.0.0', () => {
   console.log('========================================================');
-  console.log(`🚀 SERVIDOR CATALOGO CABALLEROS CORRIENDO EN: http://localhost:${currentPort}`);
+  console.log(`🚀 SERVIDOR CATALOGO CABALLEROS CORRIENDO EN: http://0.0.0.0:${currentPort}`);
   console.log(`📁 ALMACENAMIENTO LOCAL DE FOTOS EN: ${UPLOADS_DIR}`);
-  console.log(`👑 ADMIN CREDENCIALES: Usuario "${process.env.ADMIN_USER}" | Clave "${process.env.ADMIN_PASS}"`);
+  console.log(`👑 ADMIN CREDENCIALES: Usuario "${ADMIN_USER_LOG}" | Clave "${ADMIN_PASS_LOG}"`);
   console.log('========================================================');
 });
 

@@ -71,12 +71,7 @@ const ProductController = {
         badge
       } = req.body;
 
-      if (!title || !price || !categoria_id || !subcategoria_id) {
-        return res.status(400).json({
-          success: false,
-          error: 'Los campos título, precio, categoría y subcategoría son obligatorios.'
-        });
-      }
+      // Ningún campo es obligatorio - se admiten publicaciones flexibles con fotos
 
       // Gestión de múltiples fotos locales (hasta 50 fotos, PROHIBIDO CLOUDINARY)
       let imagesList = [];

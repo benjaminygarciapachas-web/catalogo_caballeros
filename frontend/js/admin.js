@@ -322,15 +322,14 @@ const AdminModule = {
     title.textContent = `Editar Producto #${product.id}`;
     submitBtn.textContent = 'Actualizar y Sincronizar';
 
-    document.getElementById('prodTitleInput').value = product.title || '';
     if (codeInput) codeInput.value = product.code || '';
-    document.getElementById('prodCategorySelect').value = product.categoria_id;
+    const catSelect = document.getElementById('prodCategorySelect');
+    if (catSelect) catSelect.value = product.categoria_id;
     this.populateSubcategoriesSelect(product.categoria_id, product.subcategoria_id);
-    document.getElementById('prodPriceInput').value = product.price || '';
-    document.getElementById('prodOriginalPriceInput').value = product.original_price || '';
-    document.getElementById('prodSizesInput').value = product.sizes || '';
-    document.getElementById('prodBadgeSelect').value = product.badge || '';
-    document.getElementById('prodDescInput').value = product.description || '';
+    const sizesInput = document.getElementById('prodSizesInput');
+    if (sizesInput) sizesInput.value = product.sizes || '';
+    const descInput = document.getElementById('prodDescInput');
+    if (descInput) descInput.value = product.description || '';
 
     // Cargar fotos existentes del producto (hasta 50)
     this.selectedFiles = [];
@@ -355,7 +354,7 @@ const AdminModule = {
     this.clearAllPhotos();
   },
 
-  // Procesar guardado (Crear o Actualizar) con hasta 50 fotos
+  // Procesar guardado (Crear o Actualizar) con hasta 50 fotos - sin campos obligatorios
   async handleProductFormSubmit(e) {
     e.preventDefault();
 
@@ -368,25 +367,28 @@ const AdminModule = {
     const editId = document.getElementById('editProductId').value;
     const isEdit = Boolean(editId);
 
-    const totalPhotos = this.existingPhotos.length + this.selectedFiles.length;
-    if (!isEdit && totalPhotos === 0) {
-      // Advertencia amistosa pero permitida si no suben foto usará svg por defecto
-      console.log('Creando producto sin fotos adjuntas (se asignará imagen muestra)');
-    }
-
     const formData = new FormData();
     const codeVal = document.getElementById('prodCodeInput') ? document.getElementById('prodCodeInput').value.trim() : '';
+    const catSelect = document.getElementById('prodCategorySelect');
+    const subcatSelect = document.getElementById('prodSubcategorySelect');
+    const sizesInput = document.getElementById('prodSizesInput');
+    const descInput = document.getElementById('prodDescInput');
+
+    const catVal = catSelect ? catSelect.value : '1';
+    const subcatVal = subcatSelect ? subcatSelect.value : '1';
+    const sizesVal = sizesInput ? sizesInput.value.trim() : '';
+    const descVal = descInput ? descInput.value.trim() : '';
 
     formData.append('code', codeVal);
-    formData.append('title', document.getElementById('prodTitleInput').value.trim());
-    formData.append('categoria_id', document.getElementById('prodCategorySelect').value);
-    formData.append('subcategoria_id', document.getElementById('prodSubcategorySelect').value);
-    formData.append('price', document.getElementById('prodPriceInput').value);
-    formData.append('original_price', document.getElementById('prodOriginalPriceInput').value);
-    formData.append('sizes', document.getElementById('prodSizesInput').value.trim());
+    formData.append('title', codeVal ? `Prenda ${codeVal}` : 'Prenda');
+    formData.append('categoria_id', catVal);
+    formData.append('subcategoria_id', subcatVal);
+    formData.append('price', '0');
+    formData.append('original_price', '');
+    formData.append('sizes', sizesVal || 'Estándar');
     formData.append('stock', '999');
-    formData.append('badge', document.getElementById('prodBadgeSelect').value);
-    formData.append('description', document.getElementById('prodDescInput').value.trim());
+    formData.append('badge', '');
+    formData.append('description', descVal);
 
     // Adjuntar todas las fotos nuevas (hasta 50)
     this.selectedFiles.forEach(file => {

@@ -97,6 +97,11 @@ const ProductModel = {
   create({ code, title, description, price, original_price, image_url, images, categoria_id, subcategoria_id, sizes, stock, badge }) {
     const imagesStr = Array.isArray(images) ? JSON.stringify(images) : (images || JSON.stringify([image_url]));
     const cleanCode = code ? String(code).trim() : null;
+    const finalTitle = title ? String(title).trim() : (cleanCode ? `Prenda ${cleanCode}` : 'Prenda');
+    const finalPrice = (price !== undefined && price !== '' && !isNaN(Number(price))) ? Number(price) : 0;
+    const finalOriginalPrice = (original_price !== undefined && original_price !== '' && !isNaN(Number(original_price))) ? Number(original_price) : null;
+    const finalCat = categoria_id ? Number(categoria_id) : 1;
+    const finalSubcat = subcategoria_id ? Number(subcategoria_id) : 1;
 
     const sql = `
       INSERT INTO productos (code, title, description, price, original_price, image_url, images, categoria_id, subcategoria_id, sizes, stock, badge, created_at, updated_at)
@@ -104,16 +109,16 @@ const ProductModel = {
     `;
     const res = db.run(sql, [
       cleanCode,
-      title,
+      finalTitle,
       description || '',
-      Number(price),
-      original_price ? Number(original_price) : null,
+      finalPrice,
+      finalOriginalPrice,
       image_url,
       imagesStr,
-      Number(categoria_id),
-      Number(subcategoria_id),
-      sizes || 'S, M, L, XL',
-      stock !== undefined ? Number(stock) : 10,
+      finalCat,
+      finalSubcat,
+      sizes || 'Estándar',
+      stock !== undefined ? Number(stock) : 999,
       badge || null
     ]);
 
@@ -125,6 +130,16 @@ const ProductModel = {
     if (!existing) return null;
 
     const cleanCode = code !== undefined ? (code ? String(code).trim() : null) : existing.code;
+    const finalTitle = title !== undefined 
+      ? (title ? String(title).trim() : (cleanCode ? `Prenda ${cleanCode}` : existing.title))
+      : existing.title;
+    const finalPrice = price !== undefined
+      ? ((price !== '' && !isNaN(Number(price))) ? Number(price) : existing.price)
+      : existing.price;
+    const finalOriginalPrice = original_price !== undefined
+      ? ((original_price !== '' && !isNaN(Number(original_price))) ? Number(original_price) : null)
+      : existing.original_price;
+
     const finalImagesStr = images !== undefined 
       ? (Array.isArray(images) ? JSON.stringify(images) : images)
       : (existing.images ? JSON.stringify(existing.images) : JSON.stringify([existing.image_url]));
@@ -149,10 +164,10 @@ const ProductModel = {
 
     db.run(sql, [
       cleanCode,
-      title !== undefined ? title : existing.title,
+      finalTitle,
       description !== undefined ? description : existing.description,
-      price !== undefined ? Number(price) : existing.price,
-      original_price !== undefined ? (original_price ? Number(original_price) : null) : existing.original_price,
+      finalPrice,
+      finalOriginalPrice,
       image_url !== undefined ? image_url : existing.image_url,
       finalImagesStr,
       categoria_id !== undefined ? Number(categoria_id) : existing.categoria_id,

@@ -438,17 +438,19 @@ function renderProductsGrid(products) {
             <span class="card-category-tag">${escapeHtml(p.categoria_name)} &bull; ${escapeHtml(p.subcategoria_name)}</span>
             ${codeTagHtml}
           </div>
-          <h3 class="card-title">${escapeHtml(p.title)}</h3>
+          <h3 class="card-title">${(p.title && p.title !== 'Prenda' && p.title !== ',') ? escapeHtml(p.title) : (p.code ? `Prenda ${escapeHtml(p.code)}` : escapeHtml(p.subcategoria_name))}</h3>
           <p class="card-description">${escapeHtml(p.description || '')}</p>
           
           ${sizesHtml}
 
-          <div class="card-pricing-row">
-            <div>
-              <span class="price-current">S/. ${Number(p.price).toFixed(2)}</span>
-              ${originalPriceHtml}
+          ${(p.price && Number(p.price) > 0) ? `
+            <div class="card-pricing-row">
+              <div>
+                <span class="price-current">S/. ${Number(p.price).toFixed(2)}</span>
+                ${originalPriceHtml}
+              </div>
             </div>
-          </div>
+          ` : ''}
 
           <div class="card-actions">
             <button class="btn-view-detail" onclick="openProductDetail(${p.id})">Ver Detalle</button>
@@ -555,15 +557,29 @@ function openProductDetail(productId) {
   }
 
   document.getElementById('detailCategoryTag').textContent = `${product.categoria_name} • ${product.subcategoria_name}`;
-  document.getElementById('detailTitle').textContent = product.title;
-  document.getElementById('detailPrice').textContent = `S/. ${Number(product.price).toFixed(2)}`;
   
+  const displayTitle = (product.title && product.title !== 'Prenda' && product.title !== ',') 
+    ? product.title 
+    : (product.code ? `Prenda ${product.code}` : product.subcategoria_name);
+  document.getElementById('detailTitle').textContent = displayTitle;
+
+  const priceBox = document.querySelector('.detail-price-box');
+  const priceEl = document.getElementById('detailPrice');
   const origPriceEl = document.getElementById('detailOriginalPrice');
-  if (product.original_price) {
-    origPriceEl.textContent = `S/. ${Number(product.original_price).toFixed(2)}`;
-    origPriceEl.classList.remove('hidden');
+
+  if (product.price && Number(product.price) > 0) {
+    priceEl.textContent = `S/. ${Number(product.price).toFixed(2)}`;
+    priceEl.classList.remove('hidden');
+    if (priceBox) priceBox.classList.remove('hidden');
+
+    if (product.original_price) {
+      origPriceEl.textContent = `S/. ${Number(product.original_price).toFixed(2)}`;
+      origPriceEl.classList.remove('hidden');
+    } else {
+      origPriceEl.classList.add('hidden');
+    }
   } else {
-    origPriceEl.classList.add('hidden');
+    if (priceBox) priceBox.classList.add('hidden');
   }
 
   document.getElementById('detailDescription').textContent = product.description || 'Prenda de alta calidad confeccionada con los mejores materiales.';

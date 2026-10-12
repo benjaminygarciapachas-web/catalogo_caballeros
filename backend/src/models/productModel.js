@@ -186,6 +186,73 @@ const ProductModel = {
     if (!existing) return false;
     db.run('DELETE FROM productos WHERE id = ?', [id]);
     return true;
+  },
+
+  restoreAll(productsArray) {
+    if (!Array.isArray(productsArray)) return;
+    for (const p of productsArray) {
+      if (!p) continue;
+      const existing = p.id ? this.getById(p.id) : null;
+      const imagesStr = Array.isArray(p.images) 
+        ? JSON.stringify(p.images) 
+        : (p.images || JSON.stringify([p.image_url]));
+
+      if (existing) {
+        const sql = `
+          UPDATE productos
+          SET code = ?, title = ?, description = ?, price = ?, original_price = ?,
+              image_url = ?, images = ?, categoria_id = ?, subcategoria_id = ?,
+              sizes = ?, stock = ?, badge = ?, updated_at = ?
+          WHERE id = ?
+        `;
+        try {
+          db.run(sql, [
+            p.code || null,
+            p.title || 'Prenda',
+            p.description || '',
+            p.price !== undefined ? Number(p.price) : 0,
+            p.original_price !== undefined ? Number(p.original_price) : null,
+            p.image_url || '',
+            imagesStr,
+            p.categoria_id ? Number(p.categoria_id) : 1,
+            p.subcategoria_id ? Number(p.subcategoria_id) : 1,
+            p.sizes || 'Estándar',
+            p.stock !== undefined ? Number(p.stock) : 999,
+            p.badge || null,
+            p.updated_at || new Date().toISOString(),
+            p.id
+          ]);
+        } catch (e) {
+          console.error('[RESTORE UPDATE ERROR]', e.message);
+        }
+      } else {
+        const sql = `
+          INSERT INTO productos (id, code, title, description, price, original_price, image_url, images, categoria_id, subcategoria_id, sizes, stock, badge, created_at, updated_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `;
+        try {
+          db.run(sql, [
+            p.id || null,
+            p.code || null,
+            p.title || 'Prenda',
+            p.description || '',
+            p.price !== undefined ? Number(p.price) : 0,
+            p.original_price !== undefined ? Number(p.original_price) : null,
+            p.image_url || '',
+            imagesStr,
+            p.categoria_id ? Number(p.categoria_id) : 1,
+            p.subcategoria_id ? Number(p.subcategoria_id) : 1,
+            p.sizes || 'Estándar',
+            p.stock !== undefined ? Number(p.stock) : 999,
+            p.badge || null,
+            p.created_at || new Date().toISOString(),
+            p.updated_at || new Date().toISOString()
+          ]);
+        } catch (e) {
+          console.error('[RESTORE INSERT ERROR]', e.message);
+        }
+      }
+    }
   }
 };
 

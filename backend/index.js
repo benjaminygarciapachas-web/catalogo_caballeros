@@ -138,9 +138,21 @@ server.on('error', (err) => {
 server.listen(currentPort, '0.0.0.0', () => {
   console.log('========================================================');
   console.log(`🚀 SERVIDOR CATALOGO CABALLEROS CORRIENDO EN: http://0.0.0.0:${currentPort}`);
-  console.log(`📁 ALMACENAMIENTO LOCAL DE FOTOS EN: ${UPLOADS_DIR}`);
+  console.log(`☁️ ALMACENAMIENTO PERMANENTE EN NUBE: Cloudinary (hvoicb7h)`);
   console.log(`👑 ADMIN CREDENCIALES: Usuario "${ADMIN_USER_LOG}" | Clave "${ADMIN_PASS_LOG}"`);
   console.log('========================================================');
+
+  // Sincronizar y restaurar automáticamente base de datos desde Cloudinary
+  const { CloudinaryService } = require('./src/config/cloudinary');
+  const ProductModel = require('./src/models/productModel');
+  CloudinaryService.restoreDatabaseBackup().then(products => {
+    if (products && Array.isArray(products) && products.length > 0) {
+      ProductModel.restoreAll(products);
+      console.log(`✅ [CLOUDINARY] Sincronizados ${products.length} productos en la base de datos local.`);
+    }
+  }).catch(err => {
+    console.error('Error al sincronizar respaldo de Cloudinary:', err);
+  });
 });
 
 

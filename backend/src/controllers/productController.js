@@ -1,4 +1,5 @@
 const ProductModel = require('../models/productModel');
+const { CloudinaryService } = require('../config/cloudinary');
 
 const ProductController = {
   // Obtener catálogo de productos con filtros
@@ -55,8 +56,8 @@ const ProductController = {
     }
   },
 
-  // Crear nuevo producto (Solo Administrador + Subida local de hasta 50 fotos)
-  create(req, res) {
+  // Crear nuevo producto (Solo Administrador + Subida permanente a Cloudinary de hasta 50 fotos)
+  async create(req, res) {
     try {
       const {
         code,
@@ -71,24 +72,28 @@ const ProductController = {
         badge
       } = req.body;
 
-      // Ningún campo es obligatorio - se admiten publicaciones flexibles con fotos
-
-      // Gestión de múltiples fotos locales (hasta 50 fotos, PROHIBIDO CLOUDINARY)
+      // Gestión de múltiples fotos en la nube (Cloudinary permanente - hasta 50 fotos)
       let imagesList = [];
 
+      const filesToUpload = [];
       if (req.files) {
         if (Array.isArray(req.files)) {
-          imagesList.push(...req.files.map(f => `/uploads/${f.filename}`));
+          filesToUpload.push(...req.files);
         } else {
-          if (req.files.images && Array.isArray(req.files.images)) {
-            imagesList.push(...req.files.images.map(f => `/uploads/${f.filename}`));
-          }
-          if (req.files.image && Array.isArray(req.files.image)) {
-            imagesList.push(...req.files.image.map(f => `/uploads/${f.filename}`));
-          }
+          if (req.files.images && Array.isArray(req.files.images)) filesToUpload.push(...req.files.images);
+          if (req.files.image && Array.isArray(req.files.image)) filesToUpload.push(...req.files.image);
         }
       } else if (req.file) {
-        imagesList.push(`/uploads/${req.file.filename}`);
+        filesToUpload.push(req.file);
+      }
+
+      // Subir fotos a Cloudinary para persistencia permanente
+      if (filesToUpload.length > 0) {
+        console.log(`☁️ [CLOUDINARY] Subiendo ${filesToUpload.length} foto(s) a Cloudinary...`);
+        const uploadPromises = filesToUpload.map(f => CloudinaryService.uploadPhoto(f.path, f.originalname));
+        const uploadedUrls = await Promise.all(uploadPromises);
+        imagesList.push(...uploadedUrls);
+        console.log(`✅ [CLOUDINARY] ${uploadedUrls.length} foto(s) guardadas permanentemente en Cloudinary.`);
       }
 
       // Si se envió alguna URL directa de imagen
@@ -123,16 +128,18 @@ const ProductController = {
       });
 
       // SINCRONIZACIÓN EN TIEMPO REAL:
-      // Cuando el admin suba un producto, todos los clientes lo ven al instante
       if (req.io) {
         req.io.emit('product_created', newProduct);
         req.io.emit('catalog_changed', { action: 'create', product: newProduct });
         console.log(`📡 [SOCKET] Evento product_created emitido: ID ${newProduct.id}`);
       }
 
+      // Respaldo permanente de base de datos en Cloudinary
+      CloudinaryService.backupDatabase(ProductModel.getAll({})).catch(() => {});
+
       return res.status(201).json({
         success: true,
-        message: 'Producto creado y sincronizado exitosamente con hasta 50 fotos.',
+        message: 'Producto creado y guardado permanentemente en Cloudinary.',
         data: newProduct
       });
     } catch (error) {
@@ -144,8 +151,8 @@ const ProductController = {
     }
   },
 
-  // Editar producto existente (Solo Administrador)
-  update(req, res) {
+  // Actualizar producto existente (Solo Administrador)
+  async update(req, res) {
     try {
       const { id } = req.params;
       const existing = ProductModel.getById(id);
@@ -185,21 +192,24 @@ const ProductController = {
         existingImages = existing.images || (existing.image_url ? [existing.image_url] : []);
       }
 
-      // Fotos nuevas subidas
+      // Fotos nuevas subidas a Cloudinary
       let newImages = [];
+      const filesToUpload = [];
       if (req.files) {
         if (Array.isArray(req.files)) {
-          newImages.push(...req.files.map(f => `/uploads/${f.filename}`));
+          filesToUpload.push(...req.files);
         } else {
-          if (req.files.images && Array.isArray(req.files.images)) {
-            newImages.push(...req.files.images.map(f => `/uploads/${f.filename}`));
-          }
-          if (req.files.image && Array.isArray(req.files.image)) {
-            newImages.push(...req.files.image.map(f => `/uploads/${f.filename}`));
-          }
+          if (req.files.images) filesToUpload.push(...req.files.images);
+          if (req.files.image) filesToUpload.push(...req.files.image);
         }
       } else if (req.file) {
-        newImages.push(`/uploads/${req.file.filename}`);
+        filesToUpload.push(req.file);
+      }
+
+      if (filesToUpload.length > 0) {
+        console.log(`☁️ [CLOUDINARY] Subiendo ${filesToUpload.length} foto(s) nuevas a Cloudinary...`);
+        const uploadPromises = filesToUpload.map(f => CloudinaryService.uploadPhoto(f.path, f.originalname));
+        newImages = await Promise.all(uploadPromises);
       }
 
       let combinedImages = [...existingImages, ...newImages];
@@ -235,6 +245,9 @@ const ProductController = {
         console.log(`📡 [SOCKET] Evento product_updated emitido: ID ${updatedProduct.id}`);
       }
 
+      // Respaldo permanente de base de datos en Cloudinary
+      CloudinaryService.backupDatabase(ProductModel.getAll({})).catch(() => {});
+
       return res.status(200).json({
         success: true,
         message: 'Producto actualizado y sincronizado en tiempo real.',
@@ -261,6 +274,9 @@ const ProductController = {
         req.io.emit('catalog_changed', { action: 'delete', productId: Number(id) });
         console.log(`📡 [SOCKET] Evento product_deleted emitido: ID ${id}`);
       }
+
+      // Respaldo permanente de base de datos en Cloudinary
+      CloudinaryService.backupDatabase(ProductModel.getAll({})).catch(() => {});
 
       return res.status(200).json({
         success: true,

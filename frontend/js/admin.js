@@ -408,7 +408,7 @@ const AdminModule = {
 
     const submitBtn = document.getElementById('saveProductBtnText');
     const originalText = submitBtn.textContent;
-    submitBtn.textContent = 'Guardando fotos y datos en servidor...';
+    submitBtn.textContent = 'Guardando fotos permanentemente en la nube...';
 
     try {
       const url = isEdit ? `/api/products/${editId}` : '/api/products';

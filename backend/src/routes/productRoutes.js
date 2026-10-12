@@ -10,11 +10,17 @@ router.get('/', ProductController.getAll);
 // GET /api/products/:id - Consulta de producto específico
 router.get('/:id', ProductController.getById);
 
-// POST /api/products - Crear nuevo producto (Solo Admin + Almacenamiento local de imagen)
-router.post('/', requireAdmin, upload.single('image'), ProductController.create);
+// Middleware de subida para múltiples imágenes (hasta 50 fotos por producto)
+const uploadProductPhotos = upload.fields([
+  { name: 'images', maxCount: 50 },
+  { name: 'image', maxCount: 1 }
+]);
 
-// PUT /api/products/:id - Actualizar producto (Solo Admin + Almacenamiento local de imagen)
-router.put('/:id', requireAdmin, upload.single('image'), ProductController.update);
+// POST /api/products - Crear nuevo producto (Solo Admin + Almacenamiento local de fotos)
+router.post('/', requireAdmin, uploadProductPhotos, ProductController.create);
+
+// PUT /api/products/:id - Actualizar producto (Solo Admin + Almacenamiento local de fotos)
+router.put('/:id', requireAdmin, uploadProductPhotos, ProductController.update);
 
 // DELETE /api/products/:id - Eliminar producto (Solo Admin)
 router.delete('/:id', requireAdmin, ProductController.delete);

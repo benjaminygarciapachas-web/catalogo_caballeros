@@ -23,21 +23,16 @@ const storage = multer.diskStorage({
   }
 });
 
-// Validación estricta de tipos de archivo de imagen
+// Validación flexible y segura de archivos de imagen (hasta 50 fotos)
 const fileFilter = (req, file, cb) => {
-  const allowedMimeTypes = [
-    'image/jpeg',
-    'image/jpg',
-    'image/png',
-    'image/webp',
-    'image/svg+xml',
-    'image/gif'
-  ];
+  const ext = path.extname(file.originalname || '').toLowerCase();
+  const allowedExts = ['.jpg', '.jpeg', '.png', '.webp', '.svg', '.gif', '.jfif', '.bmp', '.heic', '.heif'];
+  const mime = (file.mimetype || '').toLowerCase();
 
-  if (allowedMimeTypes.includes(file.mimetype)) {
+  if (mime.startsWith('image/') || allowedExts.includes(ext)) {
     cb(null, true);
   } else {
-    cb(new Error('Formato de imagen no permitido. Solo se permiten JPEG, PNG, WEBP, SVG o GIF.'), false);
+    cb(new Error('Formato no permitido. Solo se permiten imágenes (JPG, PNG, WEBP, SVG, etc.).'), false);
   }
 };
 
@@ -45,7 +40,8 @@ const upload = multer({
   storage: storage,
   fileFilter: fileFilter,
   limits: {
-    fileSize: 10 * 1024 * 1024 // 10MB máximo
+    fileSize: 25 * 1024 * 1024, // 25MB máximo por foto
+    files: 50 // Hasta 50 fotos por publicación
   }
 });
 

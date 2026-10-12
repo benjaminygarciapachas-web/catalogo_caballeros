@@ -57,11 +57,13 @@ CREATE TABLE IF NOT EXISTS subcategorias (
 -- 6. TABLA DE PRODUCTOS
 CREATE TABLE IF NOT EXISTS productos (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    code VARCHAR(100), -- Código de producto / SKU / Referencia
     title VARCHAR(200) NOT NULL,
     description TEXT,
     price DECIMAL(10, 2) NOT NULL,
     original_price DECIMAL(10, 2),
     image_url TEXT NOT NULL,
+    images TEXT, -- Lista JSON de fotos (hasta 50 por producto)
     categoria_id INTEGER NOT NULL,
     subcategoria_id INTEGER NOT NULL,
     sizes VARCHAR(100) DEFAULT 'S, M, L, XL',

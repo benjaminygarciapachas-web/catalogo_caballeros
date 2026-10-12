@@ -6,16 +6,25 @@ const AdminModule = {
   // Lista en memoria de subcategorías obtenidas del servidor
   allSubcategories: [],
 
+  // Gestión de múltiples fotos (hasta 50 fotos por publicación)
+  selectedFiles: [],       // Archivos nuevos seleccionados (objetos File)
+  existingPhotos: [],      // URLs de fotos ya guardadas en el producto (al editar)
+
   init() {
     this.bindEvents();
     this.fetchSubcategories();
   },
 
   bindEvents() {
-    // Abrir modal de nuevo producto
+    // Abrir modal de nuevo producto (Desktop y Celular)
     const btnOpenCreate = document.getElementById('btnOpenCreateProductModal');
     if (btnOpenCreate) {
       btnOpenCreate.addEventListener('click', () => this.openCreateModal());
+    }
+
+    const btnOpenCreateMobile = document.getElementById('btnOpenCreateProductModalMobile');
+    if (btnOpenCreateMobile) {
+      btnOpenCreateMobile.addEventListener('click', () => this.openCreateModal());
     }
 
     // Cerrar modal de producto
@@ -24,11 +33,16 @@ const AdminModule = {
     if (btnCloseModal) btnCloseModal.addEventListener('click', () => this.closeProductModal());
     if (btnCancelModal) btnCancelModal.addEventListener('click', () => this.closeProductModal());
 
-    // Toggle Panel en tiempo real de usuarios
+    // Toggle Panel en tiempo real de usuarios (Desktop y Celular)
     const btnToggleAdminPanel = document.getElementById('btnToggleAdminPanel');
+    const btnToggleAdminPanelMobile = document.getElementById('btnToggleAdminPanelMobile');
     const btnCloseAdminPanel = document.getElementById('btnCloseAdminPanel');
+
     if (btnToggleAdminPanel) {
       btnToggleAdminPanel.addEventListener('click', () => this.toggleAdminPanel());
+    }
+    if (btnToggleAdminPanelMobile) {
+      btnToggleAdminPanelMobile.addEventListener('click', () => this.toggleAdminPanel());
     }
     if (btnCloseAdminPanel) {
       btnCloseAdminPanel.addEventListener('click', () => this.toggleAdminPanel(false));
@@ -42,7 +56,7 @@ const AdminModule = {
       });
     }
 
-    // Manejo de subida local de archivos de foto (PROHIBIDO CLOUDINARY)
+    // Manejo de subida local de hasta 50 fotos (PROHIBIDO CLOUDINARY)
     this.setupLocalFileUpload();
 
     // Envío del formulario de producto
@@ -117,14 +131,14 @@ const AdminModule = {
     }
   },
 
-  // Configuración de subida local con arrastrar y soltar
+  // ==========================================================================
+  // GESTIÓN DE SUBIDA LOCAL DE FOTOS (HASTA 50 FOTOS POR PUBLICACIÓN)
+  // ==========================================================================
   setupLocalFileUpload() {
     const fileZone = document.getElementById('fileUploadZone');
     const fileInput = document.getElementById('prodFileInput');
-    const placeholder = document.getElementById('uploadPlaceholder');
-    const previewContainer = document.getElementById('imagePreviewContainer');
-    const previewImg = document.getElementById('imagePreviewElement');
-    const btnRemove = document.getElementById('btnRemovePreview');
+    const btnAddMore = document.getElementById('btnAddMorePhotos');
+    const btnClearAll = document.getElementById('btnClearAllPhotos');
 
     if (!fileZone || !fileInput) return;
 
@@ -144,41 +158,134 @@ const AdminModule = {
       e.preventDefault();
       fileZone.style.borderColor = 'var(--celeste-border)';
       fileZone.style.background = 'var(--celeste-light)';
-      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-        fileInput.files = e.dataTransfer.files;
-        this.displayLocalImagePreview(e.dataTransfer.files[0]);
+      if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        this.addFiles(Array.from(e.dataTransfer.files));
       }
     });
 
     fileInput.addEventListener('change', () => {
-      if (fileInput.files && fileInput.files[0]) {
-        this.displayLocalImagePreview(fileInput.files[0]);
+      if (fileInput.files && fileInput.files.length > 0) {
+        this.addFiles(Array.from(fileInput.files));
+        fileInput.value = ''; // Limpiar para permitir volver a seleccionar los mismos si se desea
       }
     });
 
-    if (btnRemove) {
-      btnRemove.addEventListener('click', (e) => {
-        e.stopPropagation();
-        fileInput.value = '';
-        placeholder.classList.remove('hidden');
-        previewContainer.classList.add('hidden');
-        previewImg.src = '';
+    if (btnAddMore) {
+      btnAddMore.addEventListener('click', () => {
+        fileInput.click();
+      });
+    }
+
+    if (btnClearAll) {
+      btnClearAll.addEventListener('click', () => {
+        this.clearAllPhotos();
       });
     }
   },
 
-  displayLocalImagePreview(file) {
-    const placeholder = document.getElementById('uploadPlaceholder');
-    const previewContainer = document.getElementById('imagePreviewContainer');
-    const previewImg = document.getElementById('imagePreviewElement');
+  addFiles(newFiles) {
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/svg+xml', 'image/gif', 'image/jfif', 'image/bmp', 'image/heic', 'image/heif'];
+    const filtered = newFiles.filter(f => (f.type && f.type.startsWith('image/')) || validTypes.includes(f.type) || f.name.match(/\.(jpe?g|png|webp|svg|gif|jfif|bmp|heic|heif)$/i));
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      previewImg.src = e.target.result;
-      placeholder.classList.add('hidden');
-      previewContainer.classList.remove('hidden');
-    };
-    reader.readAsDataURL(file);
+    if (filtered.length < newFiles.length) {
+      window.showToast('⚠️ Se omitieron algunos archivos que no son imágenes.', 'azul');
+    }
+
+    const currentTotal = this.selectedFiles.length + this.existingPhotos.length;
+    const remainingSlots = 50 - currentTotal;
+
+    if (remainingSlots <= 0) {
+      window.showToast('⚠️ Ya alcanzaste el límite máximo de 50 fotos para esta prenda.', 'fucsia');
+      return;
+    }
+
+    let filesToAdd = filtered;
+    if (filesToAdd.length > remainingSlots) {
+      filesToAdd = filesToAdd.slice(0, remainingSlots);
+      window.showToast(`ℹ️ Límite alcanzado: Se agregaron ${remainingSlots} fotos (máximo 50 por publicación).`, 'fucsia');
+    }
+
+    this.selectedFiles.push(...filesToAdd);
+    this.renderPhotosPreviewGrid();
+  },
+
+  removeSelectedFile(index) {
+    this.selectedFiles.splice(index, 1);
+    this.renderPhotosPreviewGrid();
+  },
+
+  removeExistingPhoto(index) {
+    this.existingPhotos.splice(index, 1);
+    this.renderPhotosPreviewGrid();
+  },
+
+  clearAllPhotos() {
+    this.selectedFiles = [];
+    this.existingPhotos = [];
+    this.renderPhotosPreviewGrid();
+  },
+
+  renderPhotosPreviewGrid() {
+    const placeholder = document.getElementById('uploadPlaceholder');
+    const toolbar = document.getElementById('uploadGalleryToolbar');
+    const grid = document.getElementById('photosPreviewGrid');
+    const countChip = document.getElementById('photosCountChip');
+    const galleryCountNum = document.getElementById('galleryCountNum');
+
+    const totalCount = this.existingPhotos.length + this.selectedFiles.length;
+
+    if (countChip) countChip.textContent = `📷 ${totalCount} / 50 fotos`;
+    if (galleryCountNum) galleryCountNum.textContent = totalCount;
+
+    if (totalCount === 0) {
+      if (placeholder) placeholder.classList.remove('hidden');
+      if (toolbar) toolbar.classList.add('hidden');
+      if (grid) {
+        grid.classList.add('hidden');
+        grid.innerHTML = '';
+      }
+      return;
+    }
+
+    if (placeholder) placeholder.classList.remove('hidden'); // Dejar visible para que puedan seguir arrastrando
+    if (toolbar) toolbar.classList.remove('hidden');
+    if (grid) grid.classList.remove('hidden');
+
+    let html = '';
+    let itemIndex = 0;
+
+    // 1. Fotos existentes (del producto en edición)
+    this.existingPhotos.forEach((url, i) => {
+      const isCover = itemIndex === 0;
+      html += `
+        <div class="photo-preview-item" data-type="existing" data-index="${i}">
+          <img src="${url}" alt="Foto ${itemIndex + 1}">
+          <span class="photo-number-tag">#${itemIndex + 1}</span>
+          ${isCover ? '<span class="photo-cover-tag">Portada</span>' : ''}
+          <button type="button" class="btn-remove-thumb" onclick="AdminModule.removeExistingPhoto(${i})" title="Quitar foto">✕</button>
+        </div>
+      `;
+      itemIndex++;
+    });
+
+    // 2. Fotos nuevas seleccionadas para subir
+    this.selectedFiles.forEach((file, i) => {
+      const isCover = itemIndex === 0;
+      const objectUrl = URL.createObjectURL(file);
+      html += `
+        <div class="photo-preview-item" data-type="new" data-index="${i}">
+          <img src="${objectUrl}" alt="${file.name}">
+          <span class="photo-number-tag">#${itemIndex + 1}</span>
+          ${isCover ? '<span class="photo-cover-tag">Portada</span>' : ''}
+          <button type="button" class="btn-remove-thumb" onclick="AdminModule.removeSelectedFile(${i})" title="Quitar foto">✕</button>
+        </div>
+      `;
+      itemIndex++;
+    });
+
+    if (grid) {
+      grid.innerHTML = html;
+    }
   },
 
   openCreateModal() {
@@ -187,20 +294,21 @@ const AdminModule = {
     const title = document.getElementById('productModalTitle');
     const submitBtn = document.getElementById('saveProductBtnText');
     const editId = document.getElementById('editProductId');
+    const codeInput = document.getElementById('prodCodeInput');
 
     form.reset();
     editId.value = '';
+    if (codeInput) codeInput.value = '';
     title.textContent = 'Agregar Nuevo Producto';
     submitBtn.textContent = 'Guardar y Sincronizar';
 
-    // Restablecer preview de imagen
-    const placeholder = document.getElementById('uploadPlaceholder');
-    const previewContainer = document.getElementById('imagePreviewContainer');
-    if (placeholder) placeholder.classList.remove('hidden');
-    if (previewContainer) previewContainer.classList.add('hidden');
-
+    this.clearAllPhotos();
     this.populateSubcategoriesSelect(1);
     modal.classList.remove('hidden');
+
+    // Desplazar al inicio del formulario para mejor experiencia en celular
+    const modalContent = modal.querySelector('.modal-card');
+    if (modalContent) modalContent.scrollTop = 0;
   },
 
   openEditModal(product) {
@@ -208,40 +316,46 @@ const AdminModule = {
     const title = document.getElementById('productModalTitle');
     const submitBtn = document.getElementById('saveProductBtnText');
     const editId = document.getElementById('editProductId');
+    const codeInput = document.getElementById('prodCodeInput');
 
     editId.value = product.id;
     title.textContent = `Editar Producto #${product.id}`;
     submitBtn.textContent = 'Actualizar y Sincronizar';
 
     document.getElementById('prodTitleInput').value = product.title || '';
+    if (codeInput) codeInput.value = product.code || '';
     document.getElementById('prodCategorySelect').value = product.categoria_id;
     this.populateSubcategoriesSelect(product.categoria_id, product.subcategoria_id);
     document.getElementById('prodPriceInput').value = product.price || '';
     document.getElementById('prodOriginalPriceInput').value = product.original_price || '';
     document.getElementById('prodSizesInput').value = product.sizes || '';
-    document.getElementById('prodStockInput').value = product.stock !== undefined ? product.stock : 10;
     document.getElementById('prodBadgeSelect').value = product.badge || '';
     document.getElementById('prodDescInput').value = product.description || '';
 
-    // Mostrar foto actual en preview
-    const placeholder = document.getElementById('uploadPlaceholder');
-    const previewContainer = document.getElementById('imagePreviewContainer');
-    const previewImg = document.getElementById('imagePreviewElement');
-    if (product.image_url) {
-      previewImg.src = product.image_url;
-      placeholder.classList.add('hidden');
-      previewContainer.classList.remove('hidden');
+    // Cargar fotos existentes del producto (hasta 50)
+    this.selectedFiles = [];
+    if (product.images && Array.isArray(product.images) && product.images.length > 0) {
+      this.existingPhotos = [...product.images];
+    } else if (product.image_url) {
+      this.existingPhotos = [product.image_url];
+    } else {
+      this.existingPhotos = [];
     }
 
+    this.renderPhotosPreviewGrid();
     modal.classList.remove('hidden');
+
+    const modalContent = modal.querySelector('.modal-card');
+    if (modalContent) modalContent.scrollTop = 0;
   },
 
   closeProductModal() {
     const modal = document.getElementById('productModalOverlay');
     if (modal) modal.classList.add('hidden');
+    this.clearAllPhotos();
   },
 
-  // Procesar guardado (Crear o Actualizar) con almacenamiento local
+  // Procesar guardado (Crear o Actualizar) con hasta 50 fotos
   async handleProductFormSubmit(e) {
     e.preventDefault();
 
@@ -254,26 +368,39 @@ const AdminModule = {
     const editId = document.getElementById('editProductId').value;
     const isEdit = Boolean(editId);
 
+    const totalPhotos = this.existingPhotos.length + this.selectedFiles.length;
+    if (!isEdit && totalPhotos === 0) {
+      // Advertencia amistosa pero permitida si no suben foto usará svg por defecto
+      console.log('Creando producto sin fotos adjuntas (se asignará imagen muestra)');
+    }
+
     const formData = new FormData();
+    const codeVal = document.getElementById('prodCodeInput') ? document.getElementById('prodCodeInput').value.trim() : '';
+
+    formData.append('code', codeVal);
     formData.append('title', document.getElementById('prodTitleInput').value.trim());
     formData.append('categoria_id', document.getElementById('prodCategorySelect').value);
     formData.append('subcategoria_id', document.getElementById('prodSubcategorySelect').value);
     formData.append('price', document.getElementById('prodPriceInput').value);
     formData.append('original_price', document.getElementById('prodOriginalPriceInput').value);
     formData.append('sizes', document.getElementById('prodSizesInput').value.trim());
-    formData.append('stock', document.getElementById('prodStockInput').value);
+    formData.append('stock', '999');
     formData.append('badge', document.getElementById('prodBadgeSelect').value);
     formData.append('description', document.getElementById('prodDescInput').value.trim());
 
-    // Archivo de imagen local
-    const fileInput = document.getElementById('prodFileInput');
-    if (fileInput.files && fileInput.files[0]) {
-      formData.append('image', fileInput.files[0]);
+    // Adjuntar todas las fotos nuevas (hasta 50)
+    this.selectedFiles.forEach(file => {
+      formData.append('images', file);
+    });
+
+    // Adjuntar lista de fotos existentes conservadas
+    if (isEdit) {
+      formData.append('existing_images', JSON.stringify(this.existingPhotos));
     }
 
     const submitBtn = document.getElementById('saveProductBtnText');
     const originalText = submitBtn.textContent;
-    submitBtn.textContent = 'Guardando en disco local...';
+    submitBtn.textContent = 'Guardando fotos y datos en servidor...';
 
     try {
       const url = isEdit ? `/api/products/${editId}` : '/api/products';
@@ -294,7 +421,7 @@ const AdminModule = {
       }
 
       this.closeProductModal();
-      window.showToast(isEdit ? '✅ Producto actualizado correctamente' : '🎉 Producto creado y sincronizado en tiempo real');
+      window.showToast(isEdit ? '✅ Producto actualizado correctamente' : '🎉 Producto publicado exitosamente en tiempo real');
 
     } catch (err) {
       console.error('Error al guardar producto:', err);
@@ -353,12 +480,14 @@ const AdminModule = {
     const users = (data && data.users) ? data.users : [];
     const count = (data && typeof data.count === 'number') ? data.count : users.length;
 
-    // Actualizar badges de conteo
+    // Actualizar badges de conteo (Desktop y Celular)
     const liveCountBadge = document.getElementById('adminLiveCountBadge');
+    const liveCountBadgeMobile = document.getElementById('adminLiveCountBadgeMobile');
     const panelUserCount = document.getElementById('adminPanelUserCount');
     const activeUsersChip = document.getElementById('activeUsersCount');
 
     if (liveCountBadge) liveCountBadge.textContent = count;
+    if (liveCountBadgeMobile) liveCountBadgeMobile.textContent = count;
     if (panelUserCount) panelUserCount.textContent = count;
     if (activeUsersChip) activeUsersChip.textContent = count;
 

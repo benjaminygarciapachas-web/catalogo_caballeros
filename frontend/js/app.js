@@ -197,13 +197,18 @@ function initEventListeners() {
     loginForm.addEventListener('submit', (e) => handleLoginSubmit(e));
   }
 
-  // Modal de Detalle
+  // Modal de Detalle y carrusel
   const btnCloseDetailModal = document.getElementById('btnCloseDetailModal');
   if (btnCloseDetailModal) {
     btnCloseDetailModal.addEventListener('click', () => {
       document.getElementById('detailModalOverlay').classList.add('hidden');
     });
   }
+
+  const btnPrev = document.getElementById('btnDetailPrevPhoto');
+  const btnNext = document.getElementById('btnDetailNextPhoto');
+  if (btnPrev) btnPrev.addEventListener('click', () => switchDetailPhoto(-1));
+  if (btnNext) btnNext.addEventListener('click', () => switchDetailPhoto(1));
 }
 
 // ==========================================================================
@@ -310,14 +315,15 @@ function applyFilters() {
     list = list.filter(p => p.subcategoria_slug === AppState.activeSubcategorySlug);
   }
 
-  // 3. Filtro por búsqueda
+  // 3. Filtro por búsqueda (Título, descripción, subcategoría y código)
   if (AppState.searchQuery) {
     const q = AppState.searchQuery;
     list = list.filter(p => {
       const matchTitle = p.title && p.title.toLowerCase().includes(q);
       const matchDesc = p.description && p.description.toLowerCase().includes(q);
       const matchSub = p.subcategoria_name && p.subcategoria_name.toLowerCase().includes(q);
-      return matchTitle || matchDesc || matchSub;
+      const matchCode = p.code && p.code.toLowerCase().includes(q);
+      return matchTitle || matchDesc || matchSub || matchCode;
     });
   }
 
@@ -381,11 +387,11 @@ function renderProductsGrid(products) {
           <h3 style="margin-top: 6px; font-weight: 800; font-size: 1.25rem;">Catálogo listo y disponible</h3>
           <p style="color: var(--text-muted); font-size: 0.92rem; max-width: 480px; margin: 8px auto 18px;">
             ${isAdmin 
-              ? 'Todas las fotos de muestra han sido eliminadas. Puedes comenzar a subir tus propias fotografías y prendas ahora mismo.' 
-              : 'El catálogo está preparado para recibir la nueva colección de prendas exclusivas. Ingresa como Administrador para subir tus fotos.'}
+              ? 'Tus fotografías y publicaciones se mantendrán guardadas permanentemente en el catálogo.' 
+              : 'El catálogo está preparado para recibir la nueva colección de prendas exclusivas.'}
           </p>
           ${isAdmin 
-            ? '<button class="btn btn-fucsia" onclick="AdminModule.openCreateModal()">➕ Agregar Primer Producto</button>' 
+            ? '<button class="btn btn-fucsia" onclick="AdminModule.openCreateModal()">➕ Publicar Primer Producto</button>' 
             : '<button class="btn btn-azul" onclick="openLoginModal()">Iniciar Sesión (PATTYps)</button>'}
         </div>
       `;
@@ -398,7 +404,14 @@ function renderProductsGrid(products) {
   grid.innerHTML = products.map(p => {
     const badgeHtml = p.badge ? `<span class="card-badge badge-${p.badge.replace(/\s+/g, '')}">${p.badge}</span>` : '';
     const originalPriceHtml = p.original_price ? `<span class="price-original">S/. ${Number(p.original_price).toFixed(2)}</span>` : '';
+    const codeTagHtml = p.code ? `<span class="card-code-pill">Cód: ${escapeHtml(p.code)}</span>` : '';
     
+    // Indicador de múltiples fotos
+    const photosCount = (p.images && Array.isArray(p.images)) ? p.images.length : (p.image_url ? 1 : 0);
+    const photosChipHtml = photosCount > 1 
+      ? `<span class="card-photos-chip" title="${photosCount} fotos disponibles">📷 ${photosCount} fotos</span>` 
+      : '';
+
     // Tallas
     const sizesArray = p.sizes ? p.sizes.split(',').map(s => s.trim()).filter(Boolean) : [];
     const sizesHtml = sizesArray.length > 0 
@@ -417,10 +430,14 @@ function renderProductsGrid(products) {
       <article class="product-card" id="product-card-${p.id}">
         <div class="card-media" onclick="openProductDetail(${p.id})">
           ${badgeHtml}
+          ${photosChipHtml}
           <img src="${p.image_url}" alt="${escapeHtml(p.title)}" loading="lazy">
         </div>
         <div class="card-body">
-          <div class="card-category-tag">${escapeHtml(p.categoria_name)} &bull; ${escapeHtml(p.subcategoria_name)}</div>
+          <div class="card-category-row">
+            <span class="card-category-tag">${escapeHtml(p.categoria_name)} &bull; ${escapeHtml(p.subcategoria_name)}</span>
+            ${codeTagHtml}
+          </div>
           <h3 class="card-title">${escapeHtml(p.title)}</h3>
           <p class="card-description">${escapeHtml(p.description || '')}</p>
           
@@ -431,7 +448,6 @@ function renderProductsGrid(products) {
               <span class="price-current">S/. ${Number(p.price).toFixed(2)}</span>
               ${originalPriceHtml}
             </div>
-            <span class="stock-tag">${p.stock > 0 ? `Stock: ${p.stock}` : 'Agotado'}</span>
           </div>
 
           <div class="card-actions">
@@ -455,13 +471,89 @@ function escapeHtml(str) {
 }
 
 // ==========================================================================
-// DETALLE DE PRODUCTO (MODAL / LIGHTBOX)
+// DETALLE DE PRODUCTO (MODAL / LIGHTBOX CON CARRUSEL DE FOTOS)
 // ==========================================================================
+let currentDetailProduct = null;
+let currentDetailPhotoIndex = 0;
+
+function switchDetailPhoto(direction) {
+  if (!currentDetailProduct) return;
+  const photos = (currentDetailProduct.images && currentDetailProduct.images.length > 0)
+    ? currentDetailProduct.images
+    : [currentDetailProduct.image_url];
+  
+  if (photos.length <= 1) return;
+
+  currentDetailPhotoIndex = (currentDetailPhotoIndex + direction + photos.length) % photos.length;
+  renderDetailPhoto();
+}
+
+function selectDetailPhoto(index) {
+  currentDetailPhotoIndex = index;
+  renderDetailPhoto();
+}
+
+function renderDetailPhoto() {
+  if (!currentDetailProduct) return;
+  const photos = (currentDetailProduct.images && currentDetailProduct.images.length > 0)
+    ? currentDetailProduct.images
+    : [currentDetailProduct.image_url];
+
+  const imgEl = document.getElementById('detailImg');
+  const counterEl = document.getElementById('detailPhotoCounter');
+  const stripEl = document.getElementById('detailThumbnailsStrip');
+  const prevBtn = document.getElementById('btnDetailPrevPhoto');
+  const nextBtn = document.getElementById('btnDetailNextPhoto');
+
+  imgEl.src = photos[currentDetailPhotoIndex] || currentDetailProduct.image_url;
+
+  if (photos.length > 1) {
+    if (counterEl) {
+      counterEl.textContent = `${currentDetailPhotoIndex + 1} / ${photos.length}`;
+      counterEl.classList.remove('hidden');
+    }
+    if (prevBtn) prevBtn.classList.remove('hidden');
+    if (nextBtn) nextBtn.classList.remove('hidden');
+    if (stripEl) {
+      stripEl.classList.remove('hidden');
+      stripEl.innerHTML = photos.map((url, i) => `
+        <button type="button" class="thumb-strip-btn ${i === currentDetailPhotoIndex ? 'active' : ''}" onclick="selectDetailPhoto(${i})" title="Ver foto ${i + 1}">
+          <img src="${url}" alt="Miniatura ${i + 1}">
+        </button>
+      `).join('');
+    }
+  } else {
+    if (counterEl) counterEl.classList.add('hidden');
+    if (prevBtn) prevBtn.classList.add('hidden');
+    if (nextBtn) nextBtn.classList.add('hidden');
+    if (stripEl) {
+      stripEl.classList.add('hidden');
+      stripEl.innerHTML = '';
+    }
+  }
+}
+
+window.selectDetailPhoto = selectDetailPhoto;
+window.switchDetailPhoto = switchDetailPhoto;
+
 function openProductDetail(productId) {
   const product = AppState.products.find(p => p.id === productId);
   if (!product) return;
 
-  document.getElementById('detailImg').src = product.image_url;
+  currentDetailProduct = product;
+  currentDetailPhotoIndex = 0;
+  renderDetailPhoto();
+
+  // Código de prenda en detalle
+  const codeTag = document.getElementById('detailCodeTag');
+  const codeVal = document.getElementById('detailCodeVal');
+  if (product.code) {
+    codeVal.textContent = product.code;
+    codeTag.classList.remove('hidden');
+  } else {
+    codeTag.classList.add('hidden');
+  }
+
   document.getElementById('detailCategoryTag').textContent = `${product.categoria_name} • ${product.subcategoria_name}`;
   document.getElementById('detailTitle').textContent = product.title;
   document.getElementById('detailPrice').textContent = `S/. ${Number(product.price).toFixed(2)}`;
@@ -476,14 +568,6 @@ function openProductDetail(productId) {
 
   document.getElementById('detailDescription').textContent = product.description || 'Prenda de alta calidad confeccionada con los mejores materiales.';
   document.getElementById('detailSizesChips').textContent = product.sizes || 'Estándar';
-  
-  const stockEl = document.getElementById('detailStockBadge');
-  stockEl.textContent = product.stock > 0 ? `${product.stock} disponibles` : 'Agotado';
-
-  // Configurar enlace de consulta rápida por WhatsApp
-  const btnWhatsApp = document.getElementById('btnContactWhatsApp');
-  const message = encodeURIComponent(`¡Hola! Deseo consultar por el producto: "${product.title}" (Ref ID: #${product.id}) del CATALOGO CABALLEROS por S/. ${Number(product.price).toFixed(2)}`);
-  btnWhatsApp.href = `https://api.whatsapp.com/send?text=${message}`;
 
   document.getElementById('detailModalOverlay').classList.remove('hidden');
 }

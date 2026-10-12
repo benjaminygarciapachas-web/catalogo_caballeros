@@ -198,12 +198,41 @@ function initEventListeners() {
   }
 
   // Modal de Detalle y carrusel
+  const detailModalOverlay = document.getElementById('detailModalOverlay');
   const btnCloseDetailModal = document.getElementById('btnCloseDetailModal');
-  if (btnCloseDetailModal) {
-    btnCloseDetailModal.addEventListener('click', () => {
-      document.getElementById('detailModalOverlay').classList.add('hidden');
+  const btnCloseDetailModalBottom = document.getElementById('btnCloseDetailModalBottom');
+
+  const closeDetailModal = () => {
+    if (detailModalOverlay) detailModalOverlay.classList.add('hidden');
+  };
+
+  if (btnCloseDetailModal) btnCloseDetailModal.addEventListener('click', closeDetailModal);
+  if (btnCloseDetailModalBottom) btnCloseDetailModalBottom.addEventListener('click', closeDetailModal);
+
+  // Cerrar al hacer clic en el fondo oscuro exterior
+  if (detailModalOverlay) {
+    detailModalOverlay.addEventListener('click', (e) => {
+      if (e.target === detailModalOverlay) closeDetailModal();
     });
   }
+
+  // Cerrar modal de login al hacer clic en el fondo oscuro exterior
+  if (loginModalOverlay) {
+    loginModalOverlay.addEventListener('click', (e) => {
+      if (e.target === loginModalOverlay) closeLoginModal();
+    });
+  }
+
+  // Cerrar cualquier modal al presionar la tecla Escape
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      closeDetailModal();
+      closeLoginModal();
+      if (window.AdminModule && typeof window.AdminModule.closeProductModal === 'function') {
+        window.AdminModule.closeProductModal();
+      }
+    }
+  });
 
   const btnPrev = document.getElementById('btnDetailPrevPhoto');
   const btnNext = document.getElementById('btnDetailNextPhoto');

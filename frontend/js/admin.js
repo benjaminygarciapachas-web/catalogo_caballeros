@@ -28,10 +28,16 @@ const AdminModule = {
     }
 
     // Cerrar modal de producto
+    const productModal = document.getElementById('productModalOverlay');
     const btnCloseModal = document.getElementById('btnCloseProductModal');
     const btnCancelModal = document.getElementById('btnCancelProductModal');
     if (btnCloseModal) btnCloseModal.addEventListener('click', () => this.closeProductModal());
     if (btnCancelModal) btnCancelModal.addEventListener('click', () => this.closeProductModal());
+    if (productModal) {
+      productModal.addEventListener('click', (e) => {
+        if (e.target === productModal) this.closeProductModal();
+      });
+    }
 
     // Toggle Panel en tiempo real de usuarios (Desktop y Celular)
     const btnToggleAdminPanel = document.getElementById('btnToggleAdminPanel');

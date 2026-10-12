@@ -585,7 +585,10 @@ function openProductDetail(productId) {
   document.getElementById('detailDescription').textContent = product.description || 'Prenda de alta calidad confeccionada con los mejores materiales.';
   document.getElementById('detailSizesChips').textContent = product.sizes || 'Estándar';
 
-  document.getElementById('detailModalOverlay').classList.remove('hidden');
+  const overlay = document.getElementById('detailModalOverlay');
+  overlay.classList.remove('hidden');
+  const modalCard = overlay.querySelector('.modal-card');
+  if (modalCard) modalCard.scrollTop = 0;
 }
 
 // ==========================================================================

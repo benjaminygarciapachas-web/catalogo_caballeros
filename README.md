@@ -116,10 +116,12 @@ catalogo__caballeros/
     * polo y camisas
     * pantalones y shorts
     * conjuntos
+    * gorras
 - **Calzado**:
   - Zapatillas
   - Zapatos
   - Sandalias
+  - CAT
 
 ---
 

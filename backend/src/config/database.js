@@ -70,7 +70,9 @@ function initDatabase() {
       { id: 8, categoria_id: 1, tipo_grupo: 'Normal', name: 'conjuntos', slug: 'conjuntos' },
       { id: 9, categoria_id: 2, tipo_grupo: 'Calzado', name: 'Zapatillas', slug: 'zapatillas' },
       { id: 10, categoria_id: 2, tipo_grupo: 'Calzado', name: 'Zapatos', slug: 'zapatos' },
-      { id: 11, categoria_id: 2, tipo_grupo: 'Calzado', name: 'Sandalias', slug: 'sandalias' }
+      { id: 11, categoria_id: 2, tipo_grupo: 'Calzado', name: 'Sandalias', slug: 'sandalias' },
+      { id: 12, categoria_id: 1, tipo_grupo: 'Normal', name: 'gorras', slug: 'gorras' },
+      { id: 13, categoria_id: 2, tipo_grupo: 'Calzado', name: 'CAT', slug: 'cat' }
     ];
 
     const insertSubcat = db.prepare(`

@@ -60,10 +60,12 @@ const subcats = [
   { id: 6, categoria_id: 1, tipo_grupo: 'Normal', name: 'polo y camisas', slug: 'polo-y-camisas' },
   { id: 7, categoria_id: 1, tipo_grupo: 'Normal', name: 'pantalones y shorts', slug: 'pantalones-y-shorts' },
   { id: 8, categoria_id: 1, tipo_grupo: 'Normal', name: 'conjuntos', slug: 'conjuntos' },
+  { id: 12, categoria_id: 1, tipo_grupo: 'Normal', name: 'gorras', slug: 'gorras' },
   // Calzado
   { id: 9, categoria_id: 2, tipo_grupo: 'Calzado', name: 'Zapatillas', slug: 'zapatillas' },
   { id: 10, categoria_id: 2, tipo_grupo: 'Calzado', name: 'Zapatos', slug: 'zapatos' },
-  { id: 11, categoria_id: 2, tipo_grupo: 'Calzado', name: 'Sandalias', slug: 'sandalias' }
+  { id: 11, categoria_id: 2, tipo_grupo: 'Calzado', name: 'Sandalias', slug: 'sandalias' },
+  { id: 13, categoria_id: 2, tipo_grupo: 'Calzado', name: 'CAT', slug: 'cat' }
 ];
 
 const insertSubcat = db.prepare(`

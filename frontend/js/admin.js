@@ -298,6 +298,8 @@ const AdminModule = {
 
     form.reset();
     editId.value = '';
+    const titleInput = document.getElementById('prodTitleInput');
+    if (titleInput) titleInput.value = '';
     if (codeInput) codeInput.value = '';
     title.textContent = 'Agregar Nuevo Producto';
     submitBtn.textContent = 'Guardar y Sincronizar';
@@ -322,6 +324,8 @@ const AdminModule = {
     title.textContent = `Editar Producto #${product.id}`;
     submitBtn.textContent = 'Actualizar y Sincronizar';
 
+    const titleInput = document.getElementById('prodTitleInput');
+    if (titleInput) titleInput.value = (product.title && product.title !== 'Prenda') ? product.title : '';
     if (codeInput) codeInput.value = product.code || '';
     const catSelect = document.getElementById('prodCategorySelect');
     if (catSelect) catSelect.value = product.categoria_id;
@@ -368,6 +372,8 @@ const AdminModule = {
     const isEdit = Boolean(editId);
 
     const formData = new FormData();
+    const titleInput = document.getElementById('prodTitleInput');
+    const titleVal = titleInput ? titleInput.value.trim() : '';
     const codeVal = document.getElementById('prodCodeInput') ? document.getElementById('prodCodeInput').value.trim() : '';
     const catSelect = document.getElementById('prodCategorySelect');
     const subcatSelect = document.getElementById('prodSubcategorySelect');
@@ -380,7 +386,7 @@ const AdminModule = {
     const descVal = descInput ? descInput.value.trim() : '';
 
     formData.append('code', codeVal);
-    formData.append('title', codeVal ? `Prenda ${codeVal}` : 'Prenda');
+    formData.append('title', titleVal || (codeVal ? `Prenda ${codeVal}` : 'Prenda'));
     formData.append('categoria_id', catVal);
     formData.append('subcategoria_id', subcatVal);
     formData.append('price', '0');

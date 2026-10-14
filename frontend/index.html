@@ -270,8 +270,12 @@
           <input 
             type="text" 
             id="loginUsernameInput" 
+            name="catalogo_user_access"
             placeholder="Introduce tu usuario..." 
-            autocomplete="username"
+            autocomplete="off"
+            autocorrect="off"
+            autocapitalize="off"
+            spellcheck="false"
           >
           <span class="field-hint" id="usernameHint">Ingresa tu nombre o usuario.</span>
         </div>
@@ -281,25 +285,11 @@
           <input 
             type="password" 
             id="loginPasswordInput" 
+            name="catalogo_pass_access"
             placeholder="Introduce tu contraseña..." 
-            autocomplete="current-password"
+            autocomplete="new-password"
           >
           <span class="field-hint" id="passwordHint">Requerida para Administrador (Opcional para Clientes).</span>
-        </div>
-
-        <!-- Banner Informativo -->
-        <div class="role-notice-box" id="roleNoticeBox">
-          <div class="notice-icon">🔒</div>
-          <div class="notice-text">
-            <strong>Acceso Administrador:</strong> Selecciona la pestaña <em>Modo Administrador</em> para gestionar el catálogo.
-          </div>
-        </div>
-
-        <!-- Botón para rellenar rápido credenciales de Admin en pruebas -->
-        <div class="quick-admin-fill">
-          <button type="button" class="btn-link-action" id="btnFillAdminCredentials">
-            🔑 Autocompletar datos de Administrador
-          </button>
         </div>
 
         <div class="modal-actions">

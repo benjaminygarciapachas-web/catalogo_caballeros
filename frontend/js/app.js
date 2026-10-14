@@ -166,30 +166,20 @@ function initEventListeners() {
       tabLoginCliente.classList.add('active');
       tabLoginAdmin.classList.remove('active');
       usernameInput.placeholder = 'Tu nombre de usuario';
-      if (usernameInput.value === 'PATTYps') {
-        usernameInput.value = '';
-      }
+      usernameInput.value = '';
+      if (passwordInput) passwordInput.value = '';
     });
 
     tabLoginAdmin.addEventListener('click', () => {
       tabLoginAdmin.classList.add('active');
       tabLoginCliente.classList.remove('active');
       usernameInput.placeholder = 'Usuario de Administrador';
-      // Autocompletar el campo con PATTYps para que nunca quede vacío ni confunda
-      usernameInput.value = 'PATTYps';
-      if (passwordInput) passwordInput.focus();
-    });
-  }
-
-  // Botón para autorrellenar credenciales del Admin
-  const btnFillAdmin = document.getElementById('btnFillAdminCredentials');
-  if (btnFillAdmin) {
-    btnFillAdmin.addEventListener('click', () => {
-      usernameInput.value = 'PATTYps';
-      passwordInput.value = 'PATTYpschincha452416';
-      tabLoginAdmin.classList.add('active');
-      tabLoginCliente.classList.remove('active');
-      usernameInput.placeholder = 'Usuario de Administrador';
+      // Sin autorrellenado: los campos siempre permanecen vacíos
+      usernameInput.value = '';
+      if (passwordInput) {
+        passwordInput.value = '';
+        passwordInput.focus();
+      }
     });
   }
 
@@ -421,7 +411,7 @@ function renderProductsGrid(products) {
           </p>
           ${isAdmin 
             ? '<button class="btn btn-fucsia" onclick="AdminModule.openCreateModal()">➕ Publicar Primer Producto</button>' 
-            : '<button class="btn btn-azul" onclick="openLoginModal()">Iniciar Sesión (PATTYps)</button>'}
+            : '<button class="btn btn-azul" onclick="openLoginModal()">Iniciar Sesión</button>'}
         </div>
       `;
     }
@@ -625,11 +615,19 @@ function openProductDetail(productId) {
 // ==========================================================================
 function openLoginModal() {
   const modal = document.getElementById('loginModalOverlay');
+  const usernameInput = document.getElementById('loginUsernameInput');
+  const passwordInput = document.getElementById('loginPasswordInput');
+  if (usernameInput) usernameInput.value = '';
+  if (passwordInput) passwordInput.value = '';
   if (modal) modal.classList.remove('hidden');
 }
 
 function closeLoginModal() {
   const modal = document.getElementById('loginModalOverlay');
+  const usernameInput = document.getElementById('loginUsernameInput');
+  const passwordInput = document.getElementById('loginPasswordInput');
+  if (usernameInput) usernameInput.value = '';
+  if (passwordInput) passwordInput.value = '';
   if (modal) modal.classList.add('hidden');
 }
 
@@ -641,16 +639,18 @@ async function handleLoginSubmit(e) {
   const tabLoginAdmin = document.getElementById('tabLoginAdmin');
   const submitBtn = document.getElementById('submitLoginBtnText') || document.getElementById('btnSubmitLogin');
 
-  let username = (usernameInput ? usernameInput.value : '').trim();
+  const username = (usernameInput ? usernameInput.value : '').trim();
   const password = (passwordInput ? passwordInput.value : '').trim();
+  const originalText = submitBtn ? submitBtn.textContent : 'Ingresar al Catálogo';
 
-  // Si está en Modo Administrador y el usuario está vacío, asignar PATTYps automáticamente
-  if (tabLoginAdmin && tabLoginAdmin.classList.contains('active') && !username) {
-    username = 'PATTYps';
-    if (usernameInput) usernameInput.value = 'PATTYps';
+  // Si está en Modo Administrador, verificar que se hayan ingresado los datos manualmente
+  if (tabLoginAdmin && tabLoginAdmin.classList.contains('active')) {
+    if (!username || !password) {
+      window.showToast('Por favor introduce tu usuario y contraseña de Administrador.', 'error');
+      return;
+    }
   }
 
-  const originalText = submitBtn ? submitBtn.textContent : 'Ingresar al Catálogo';
   if (submitBtn) submitBtn.textContent = 'Verificando...';
 
   try {

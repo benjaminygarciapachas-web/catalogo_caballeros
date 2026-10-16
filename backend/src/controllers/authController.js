@@ -76,13 +76,13 @@ const AuthController = {
         if (!password) {
           return res.status(401).json({
             success: false,
-            error: 'Debes ingresar la contraseña de Administrador. (Clave autorizada: PATTYpschincha452416 o admin).'
+            error: 'Debes ingresar la contraseña de Administrador.'
           });
         }
 
         return res.status(401).json({
           success: false,
-          error: 'Contraseña de Administrador incorrecta. Clave autorizada: PATTYpschincha452416 (o admin).'
+          error: 'Contraseña de Administrador incorrecta.'
         });
       }
 

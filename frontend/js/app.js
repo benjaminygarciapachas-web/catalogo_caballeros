@@ -63,26 +63,29 @@ function restoreUserSession() {
 
 function updateUserUI() {
   const user = AppState.currentUser;
+  const profilePill = document.getElementById('userProfilePill');
   const nameLabel = document.getElementById('userNameLabel');
   const roleBadge = document.getElementById('userRoleBadge');
   const loginBtnText = document.getElementById('loginBtnText');
 
   if (user) {
-    nameLabel.textContent = user.username;
-    if (user.role === 'admin') {
-      roleBadge.textContent = 'Admin 👑';
-      roleBadge.className = 'user-role-badge badge-admin';
-    } else {
-      roleBadge.textContent = 'Cliente';
-      roleBadge.className = 'user-role-badge badge-cliente';
+    if (nameLabel) nameLabel.textContent = user.username;
+    if (roleBadge) {
+      if (user.role === 'admin') {
+        roleBadge.textContent = 'Admin 👑';
+        roleBadge.className = 'user-role-badge badge-admin';
+      } else {
+        roleBadge.textContent = 'Cliente';
+        roleBadge.className = 'user-role-badge badge-cliente';
+      }
     }
-    loginBtnText.textContent = 'Cerrar Sesión';
+    if (profilePill) profilePill.classList.remove('hidden');
+    if (loginBtnText) loginBtnText.textContent = 'Cerrar Sesión';
     AdminModule.updateAdminUIState(user.role === 'admin');
   } else {
-    nameLabel.textContent = 'Invitado';
-    roleBadge.textContent = 'Cliente';
-    roleBadge.className = 'user-role-badge badge-cliente';
-    loginBtnText.textContent = 'Iniciar Sesión';
+    if (nameLabel) nameLabel.textContent = '';
+    if (profilePill) profilePill.classList.add('hidden');
+    if (loginBtnText) loginBtnText.textContent = 'Iniciar Sesión';
     AdminModule.updateAdminUIState(false);
   }
 }
@@ -176,8 +179,6 @@ function initEventListeners() {
   const tabLoginAdmin = document.getElementById('tabLoginAdmin');
   const usernameInput = document.getElementById('loginUsernameInput');
   const passwordInput = document.getElementById('loginPasswordInput');
-  const adminCredentialsHelper = document.getElementById('adminCredentialsHelper');
-  const btnAutoFillAdmin = document.getElementById('btnAutoFillAdmin');
   const btnTogglePassword = document.getElementById('btnTogglePassword');
   const eyeText = document.getElementById('eyeText');
   const loginAlertBox = document.getElementById('loginAlertBox');
@@ -187,7 +188,6 @@ function initEventListeners() {
     tabLoginCliente.addEventListener('click', () => {
       tabLoginCliente.classList.add('active');
       tabLoginAdmin.classList.remove('active');
-      if (adminCredentialsHelper) adminCredentialsHelper.classList.add('hidden');
       if (loginAlertBox) loginAlertBox.style.display = 'none';
       if (usernameInput) usernameInput.placeholder = 'Tu nombre de usuario';
       if (submitLoginBtnText) submitLoginBtnText.textContent = 'Ingresar al Catálogo';
@@ -196,27 +196,10 @@ function initEventListeners() {
     tabLoginAdmin.addEventListener('click', () => {
       tabLoginAdmin.classList.add('active');
       tabLoginCliente.classList.remove('active');
-      if (adminCredentialsHelper) adminCredentialsHelper.classList.remove('hidden');
       if (loginAlertBox) loginAlertBox.style.display = 'none';
-      if (usernameInput) usernameInput.placeholder = 'Usuario: PATTYps (o tu nombre)';
+      if (usernameInput) usernameInput.placeholder = 'Usuario de Administrador';
       if (submitLoginBtnText) submitLoginBtnText.textContent = 'Ingresar como Admin 👑';
       if (passwordInput) passwordInput.focus();
-    });
-  }
-
-  if (btnAutoFillAdmin) {
-    btnAutoFillAdmin.addEventListener('click', () => {
-      if (tabLoginAdmin) tabLoginAdmin.classList.add('active');
-      if (tabLoginCliente) tabLoginCliente.classList.remove('active');
-      if (adminCredentialsHelper) adminCredentialsHelper.classList.remove('hidden');
-      if (submitLoginBtnText) submitLoginBtnText.textContent = 'Ingresar como Admin 👑';
-      if (usernameInput) usernameInput.value = 'PATTYps';
-      if (passwordInput) {
-        passwordInput.value = 'PATTYpschincha452416';
-        passwordInput.type = 'text';
-      }
-      if (eyeText) eyeText.textContent = 'Ocultar';
-      if (loginAlertBox) loginAlertBox.style.display = 'none';
     });
   }
 
@@ -665,7 +648,6 @@ function openLoginModal(mode = 'admin') {
   const loginAlertBox = document.getElementById('loginAlertBox');
   const tabLoginCliente = document.getElementById('tabLoginCliente');
   const tabLoginAdmin = document.getElementById('tabLoginAdmin');
-  const adminCredentialsHelper = document.getElementById('adminCredentialsHelper');
   const submitLoginBtnText = document.getElementById('submitLoginBtnText');
   const eyeText = document.getElementById('eyeText');
 
@@ -680,13 +662,11 @@ function openLoginModal(mode = 'admin') {
   if (mode === 'admin') {
     if (tabLoginAdmin) tabLoginAdmin.classList.add('active');
     if (tabLoginCliente) tabLoginCliente.classList.remove('active');
-    if (adminCredentialsHelper) adminCredentialsHelper.classList.remove('hidden');
-    if (usernameInput) usernameInput.placeholder = 'Usuario: PATTYps (o tu nombre)';
+    if (usernameInput) usernameInput.placeholder = 'Usuario de Administrador';
     if (submitLoginBtnText) submitLoginBtnText.textContent = 'Ingresar como Admin 👑';
   } else {
     if (tabLoginCliente) tabLoginCliente.classList.add('active');
     if (tabLoginAdmin) tabLoginAdmin.classList.remove('active');
-    if (adminCredentialsHelper) adminCredentialsHelper.classList.add('hidden');
     if (usernameInput) usernameInput.placeholder = 'Tu nombre de usuario';
     if (submitLoginBtnText) submitLoginBtnText.textContent = 'Ingresar al Catálogo';
   }
@@ -735,7 +715,7 @@ async function handleLoginSubmit(e) {
   // Si está en Modo Administrador y no colocó contraseña
   if (isModeAdmin && !password) {
     if (loginAlertBox && loginAlertText) {
-      loginAlertText.textContent = 'Por favor introduce la contraseña de Administrador (PATTYpschincha452416 o admin).';
+      loginAlertText.textContent = 'Por favor introduce la contraseña de Administrador.';
       loginAlertBox.style.display = 'flex';
     } else {
       window.showToast('Por favor introduce la contraseña de Administrador.', 'error');

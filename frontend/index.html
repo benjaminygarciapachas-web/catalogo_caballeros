@@ -256,12 +256,33 @@
 
       <!-- Selector de Tipo de Ingreso -->
       <div class="login-role-selector">
-        <button type="button" class="role-selector-tab active" id="tabLoginCliente" data-mode="cliente">
+        <button type="button" class="role-selector-tab active" id="tabLoginAdmin" data-mode="admin">
+          <span>Modo Administrador 👑</span>
+        </button>
+        <button type="button" class="role-selector-tab" id="tabLoginCliente" data-mode="cliente">
           <span>Modo Cliente</span>
         </button>
-        <button type="button" class="role-selector-tab" id="tabLoginAdmin" data-mode="admin">
-          <span>Modo Administrador</span>
-        </button>
+      </div>
+
+      <!-- Tarjeta informativa de credenciales Admin -->
+      <div class="admin-credentials-helper" id="adminCredentialsHelper" style="background: rgba(37, 99, 235, 0.08); border: 1.5px dashed #3b82f6; border-radius: 10px; padding: 12px 14px; margin-bottom: 16px; font-size: 0.83rem; color: #1e293b;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <span style="font-weight: 700; color: #1d4ed8; display: flex; align-items: center; gap: 6px;">
+            👑 Credenciales de Administrador
+          </span>
+          <button type="button" id="btnAutoFillAdmin" style="background: #2563eb; color: #fff; border: none; padding: 5px 12px; border-radius: 6px; font-size: 0.78rem; cursor: pointer; font-weight: 700; box-shadow: 0 1px 3px rgba(37,99,235,0.3);">
+            ⚡ Rellenar Automático
+          </button>
+        </div>
+        <div style="font-size: 0.82rem; color: #475569; line-height: 1.5;">
+          Usuario: <strong style="color: #0f172a; font-family: monospace;">PATTYps</strong> (o tu nombre) &bull; Clave: <strong style="color: #0f172a; font-family: monospace;">PATTYpschincha452416</strong> (o <strong style="color: #0f172a; font-family: monospace;">admin</strong>)
+        </div>
+      </div>
+
+      <!-- Caja de Error Visual de Login -->
+      <div class="login-alert-box hidden" id="loginAlertBox" style="background: #fef2f2; border: 1.5px solid #f87171; color: #991b1b; padding: 10px 14px; border-radius: 8px; font-size: 0.83rem; margin-bottom: 16px; display: none; align-items: center; gap: 8px;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.2" style="flex-shrink: 0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span id="loginAlertText" style="font-weight: 500;"></span>
       </div>
 
       <form id="loginForm" class="modal-form" autocomplete="off">
@@ -281,7 +302,13 @@
         </div>
 
         <div class="form-group" id="passwordGroup">
-          <label for="loginPasswordInput">Contraseña</label>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+            <label for="loginPasswordInput" style="margin-bottom: 0;">Contraseña</label>
+            <button type="button" id="btnTogglePassword" style="background: transparent; border: none; color: #2563eb; font-size: 0.78rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 4px; padding: 2px 4px;">
+              <svg id="eyeIcon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              <span id="eyeText">Ver contraseña</span>
+            </button>
+          </div>
           <input 
             type="password" 
             id="loginPasswordInput" 

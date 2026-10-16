@@ -37,6 +37,22 @@ function restoreUserSession() {
     if (saved) {
       AppState.currentUser = JSON.parse(saved);
       console.log('👤 Sesión restaurada:', AppState.currentUser);
+
+      if (AppState.currentUser && AppState.currentUser.token) {
+        fetch('/api/auth/me', {
+          headers: { 'Authorization': `Bearer ${AppState.currentUser.token}` }
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.success && data.user) {
+            AppState.currentUser.role = data.user.role;
+            AppState.currentUser.username = data.user.username;
+            localStorage.setItem('catalogo_caballeros_session', JSON.stringify(AppState.currentUser));
+            updateUserUI();
+          }
+        })
+        .catch(() => {});
+      }
     }
   } catch (e) {
     console.error('Error al restaurar sesión:', e);
@@ -54,7 +70,7 @@ function updateUserUI() {
   if (user) {
     nameLabel.textContent = user.username;
     if (user.role === 'admin') {
-      roleBadge.textContent = 'Admin';
+      roleBadge.textContent = 'Admin 👑';
       roleBadge.className = 'user-role-badge badge-admin';
     } else {
       roleBadge.textContent = 'Cliente';
@@ -160,26 +176,55 @@ function initEventListeners() {
   const tabLoginAdmin = document.getElementById('tabLoginAdmin');
   const usernameInput = document.getElementById('loginUsernameInput');
   const passwordInput = document.getElementById('loginPasswordInput');
+  const adminCredentialsHelper = document.getElementById('adminCredentialsHelper');
+  const btnAutoFillAdmin = document.getElementById('btnAutoFillAdmin');
+  const btnTogglePassword = document.getElementById('btnTogglePassword');
+  const eyeText = document.getElementById('eyeText');
+  const loginAlertBox = document.getElementById('loginAlertBox');
+  const submitLoginBtnText = document.getElementById('submitLoginBtnText');
 
   if (tabLoginCliente && tabLoginAdmin) {
     tabLoginCliente.addEventListener('click', () => {
       tabLoginCliente.classList.add('active');
       tabLoginAdmin.classList.remove('active');
-      usernameInput.placeholder = 'Tu nombre de usuario';
-      usernameInput.value = '';
-      if (passwordInput) passwordInput.value = '';
+      if (adminCredentialsHelper) adminCredentialsHelper.classList.add('hidden');
+      if (loginAlertBox) loginAlertBox.style.display = 'none';
+      if (usernameInput) usernameInput.placeholder = 'Tu nombre de usuario';
+      if (submitLoginBtnText) submitLoginBtnText.textContent = 'Ingresar al Catálogo';
     });
 
     tabLoginAdmin.addEventListener('click', () => {
       tabLoginAdmin.classList.add('active');
       tabLoginCliente.classList.remove('active');
-      usernameInput.placeholder = 'Usuario de Administrador';
-      // Sin autorrellenado: los campos siempre permanecen vacíos
-      usernameInput.value = '';
+      if (adminCredentialsHelper) adminCredentialsHelper.classList.remove('hidden');
+      if (loginAlertBox) loginAlertBox.style.display = 'none';
+      if (usernameInput) usernameInput.placeholder = 'Usuario: PATTYps (o tu nombre)';
+      if (submitLoginBtnText) submitLoginBtnText.textContent = 'Ingresar como Admin 👑';
+      if (passwordInput) passwordInput.focus();
+    });
+  }
+
+  if (btnAutoFillAdmin) {
+    btnAutoFillAdmin.addEventListener('click', () => {
+      if (tabLoginAdmin) tabLoginAdmin.classList.add('active');
+      if (tabLoginCliente) tabLoginCliente.classList.remove('active');
+      if (adminCredentialsHelper) adminCredentialsHelper.classList.remove('hidden');
+      if (submitLoginBtnText) submitLoginBtnText.textContent = 'Ingresar como Admin 👑';
+      if (usernameInput) usernameInput.value = 'PATTYps';
       if (passwordInput) {
-        passwordInput.value = '';
-        passwordInput.focus();
+        passwordInput.value = 'PATTYpschincha452416';
+        passwordInput.type = 'text';
       }
+      if (eyeText) eyeText.textContent = 'Ocultar';
+      if (loginAlertBox) loginAlertBox.style.display = 'none';
+    });
+  }
+
+  if (btnTogglePassword && passwordInput) {
+    btnTogglePassword.addEventListener('click', () => {
+      const isPassword = passwordInput.type === 'password';
+      passwordInput.type = isPassword ? 'text' : 'password';
+      if (eyeText) eyeText.textContent = isPassword ? 'Ocultar' : 'Ver contraseña';
     });
   }
 
@@ -613,12 +658,39 @@ function openProductDetail(productId) {
 // ==========================================================================
 // LOGIN & AUTENTICACIÓN ESTRICTA
 // ==========================================================================
-function openLoginModal() {
+function openLoginModal(mode = 'admin') {
   const modal = document.getElementById('loginModalOverlay');
   const usernameInput = document.getElementById('loginUsernameInput');
   const passwordInput = document.getElementById('loginPasswordInput');
+  const loginAlertBox = document.getElementById('loginAlertBox');
+  const tabLoginCliente = document.getElementById('tabLoginCliente');
+  const tabLoginAdmin = document.getElementById('tabLoginAdmin');
+  const adminCredentialsHelper = document.getElementById('adminCredentialsHelper');
+  const submitLoginBtnText = document.getElementById('submitLoginBtnText');
+  const eyeText = document.getElementById('eyeText');
+
   if (usernameInput) usernameInput.value = '';
-  if (passwordInput) passwordInput.value = '';
+  if (passwordInput) {
+    passwordInput.value = '';
+    passwordInput.type = 'password';
+  }
+  if (eyeText) eyeText.textContent = 'Ver contraseña';
+  if (loginAlertBox) loginAlertBox.style.display = 'none';
+
+  if (mode === 'admin') {
+    if (tabLoginAdmin) tabLoginAdmin.classList.add('active');
+    if (tabLoginCliente) tabLoginCliente.classList.remove('active');
+    if (adminCredentialsHelper) adminCredentialsHelper.classList.remove('hidden');
+    if (usernameInput) usernameInput.placeholder = 'Usuario: PATTYps (o tu nombre)';
+    if (submitLoginBtnText) submitLoginBtnText.textContent = 'Ingresar como Admin 👑';
+  } else {
+    if (tabLoginCliente) tabLoginCliente.classList.add('active');
+    if (tabLoginAdmin) tabLoginAdmin.classList.remove('active');
+    if (adminCredentialsHelper) adminCredentialsHelper.classList.add('hidden');
+    if (usernameInput) usernameInput.placeholder = 'Tu nombre de usuario';
+    if (submitLoginBtnText) submitLoginBtnText.textContent = 'Ingresar al Catálogo';
+  }
+
   if (modal) modal.classList.remove('hidden');
 }
 
@@ -626,8 +698,13 @@ function closeLoginModal() {
   const modal = document.getElementById('loginModalOverlay');
   const usernameInput = document.getElementById('loginUsernameInput');
   const passwordInput = document.getElementById('loginPasswordInput');
+  const loginAlertBox = document.getElementById('loginAlertBox');
   if (usernameInput) usernameInput.value = '';
-  if (passwordInput) passwordInput.value = '';
+  if (passwordInput) {
+    passwordInput.value = '';
+    passwordInput.type = 'password';
+  }
+  if (loginAlertBox) loginAlertBox.style.display = 'none';
   if (modal) modal.classList.add('hidden');
 }
 
@@ -638,17 +715,32 @@ async function handleLoginSubmit(e) {
   const passwordInput = document.getElementById('loginPasswordInput');
   const tabLoginAdmin = document.getElementById('tabLoginAdmin');
   const submitBtn = document.getElementById('submitLoginBtnText') || document.getElementById('btnSubmitLogin');
+  const loginAlertBox = document.getElementById('loginAlertBox');
+  const loginAlertText = document.getElementById('loginAlertText');
 
-  const username = (usernameInput ? usernameInput.value : '').trim();
+  if (loginAlertBox) loginAlertBox.style.display = 'none';
+
+  let username = (usernameInput ? usernameInput.value : '').trim();
   const password = (passwordInput ? passwordInput.value : '').trim();
+  const isModeAdmin = tabLoginAdmin && tabLoginAdmin.classList.contains('active');
+  const mode = isModeAdmin ? 'admin' : 'cliente';
   const originalText = submitBtn ? submitBtn.textContent : 'Ingresar al Catálogo';
 
-  // Si está en Modo Administrador, verificar que se hayan ingresado los datos manualmente
-  if (tabLoginAdmin && tabLoginAdmin.classList.contains('active')) {
-    if (!username || !password) {
-      window.showToast('Por favor introduce tu usuario y contraseña de Administrador.', 'error');
-      return;
+  // Si está en Modo Administrador y no puso usuario pero sí contraseña, usar PATTYps por defecto
+  if (isModeAdmin && !username && password) {
+    username = 'PATTYps';
+    if (usernameInput) usernameInput.value = 'PATTYps';
+  }
+
+  // Si está en Modo Administrador y no colocó contraseña
+  if (isModeAdmin && !password) {
+    if (loginAlertBox && loginAlertText) {
+      loginAlertText.textContent = 'Por favor introduce la contraseña de Administrador (PATTYpschincha452416 o admin).';
+      loginAlertBox.style.display = 'flex';
+    } else {
+      window.showToast('Por favor introduce la contraseña de Administrador.', 'error');
     }
+    return;
   }
 
   if (submitBtn) submitBtn.textContent = 'Verificando...';
@@ -657,7 +749,7 @@ async function handleLoginSubmit(e) {
     const response = await fetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password })
+      body: JSON.stringify({ username, password, mode })
     });
 
     const data = await response.json();
@@ -685,7 +777,7 @@ async function handleLoginSubmit(e) {
     applyFilters();
 
     if (data.role === 'admin') {
-      window.showToast('👑 ¡Bienvenido Administrador PATTYps! Tienes control total.');
+      window.showToast(`👑 ¡Bienvenido Administrador ${data.user.username}! Tienes control total.`);
       AdminModule.toggleAdminPanel(true);
     } else {
       window.showToast(`👋 Bienvenido al catálogo, ${data.user.username}`);
@@ -693,7 +785,12 @@ async function handleLoginSubmit(e) {
 
   } catch (err) {
     console.error('Error de login:', err);
-    alert(err.message || 'Error al iniciar sesión.');
+    if (loginAlertBox && loginAlertText) {
+      loginAlertText.textContent = err.message || 'Error al iniciar sesión.';
+      loginAlertBox.style.display = 'flex';
+    } else {
+      alert(err.message || 'Error al iniciar sesión.');
+    }
   } finally {
     if (submitBtn) submitBtn.textContent = originalText;
   }

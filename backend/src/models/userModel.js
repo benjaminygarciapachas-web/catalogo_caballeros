@@ -2,7 +2,7 @@ const db = require('../config/database');
 
 const UserModel = {
   findByUsername(username) {
-    return db.get('SELECT u.*, r.name as role_name FROM usuarios u JOIN roles r ON u.role_id = r.id WHERE u.username = ?', [username]);
+    return db.get('SELECT u.*, r.name as role_name FROM usuarios u JOIN roles r ON u.role_id = r.id WHERE LOWER(u.username) = LOWER(?)', [username]);
   },
 
   findById(id) {
@@ -19,6 +19,11 @@ const UserModel = {
       [username, password_hash || null, role_id]
     );
     return this.findById(res.lastInsertRowid);
+  },
+
+  updateRole(id, role_id) {
+    db.run('UPDATE usuarios SET role_id = ? WHERE id = ?', [role_id, id]);
+    return this.findById(id);
   }
 };
 

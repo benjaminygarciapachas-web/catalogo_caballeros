@@ -1,25 +1,20 @@
 const cloudinary = require('cloudinary').v2;
 const fs = require('fs');
 
-const CLOUD_NAME = (process.env.CLOUDINARY_CLOUD_NAME || 'hvoicb7h').trim();
-const API_SECRET = (process.env.CLOUDINARY_API_SECRET || 'PjrI6SwHn6CAb5Dmsfh26m5wzlg').trim();
-// Clave real válida probada y verificada
+// Credenciales válidas oficiales y probadas de Cloudinary
+const VALID_CLOUD_NAME = 'hvoicb7h';
 const VALID_API_KEY = '296764566543229';
+const VALID_API_SECRET = 'PjrI6SwHn6CAb5Dmsfh26m5wzlg';
 
-// Limpiar cualquier errata conocida que venga desde variables de entorno de Render
-if (process.env.CLOUDINARY_URL) {
-  process.env.CLOUDINARY_URL = process.env.CLOUDINARY_URL.replace('296764586543229', VALID_API_KEY);
-}
-if (process.env.CLOUDINARY_API_KEY) {
-  process.env.CLOUDINARY_API_KEY = process.env.CLOUDINARY_API_KEY.replace('296764586543229', VALID_API_KEY);
-}
+// Eliminar variable CLOUDINARY_URL por si viene con datos erróneos de entorno
+delete process.env.CLOUDINARY_URL;
 
-// Configurar Cloudinary con la clave correcta garantizada
+// Configurar Cloudinary garantizando las credenciales probadas
 cloudinary.config(true);
 cloudinary.config({
-  cloud_name: CLOUD_NAME,
+  cloud_name: VALID_CLOUD_NAME,
   api_key: VALID_API_KEY,
-  api_secret: API_SECRET,
+  api_secret: VALID_API_SECRET,
   secure: true
 });
 

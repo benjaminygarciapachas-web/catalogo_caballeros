@@ -1,16 +1,25 @@
 const cloudinary = require('cloudinary').v2;
 const fs = require('fs');
 
-let apiKey = (process.env.CLOUDINARY_API_KEY || '296764566543229').trim();
-// Corrección automática por si se configuró con la errata (8 en vez de 6)
-if (apiKey === '296764586543229') {
-  apiKey = '296764566543229';
+const CLOUD_NAME = (process.env.CLOUDINARY_CLOUD_NAME || 'hvoicb7h').trim();
+const API_SECRET = (process.env.CLOUDINARY_API_SECRET || 'PjrI6SwHn6CAb5Dmsfh26m5wzlg').trim();
+// Clave real válida probada y verificada
+const VALID_API_KEY = '296764566543229';
+
+// Limpiar cualquier errata conocida que venga desde variables de entorno de Render
+if (process.env.CLOUDINARY_URL) {
+  process.env.CLOUDINARY_URL = process.env.CLOUDINARY_URL.replace('296764586543229', VALID_API_KEY);
+}
+if (process.env.CLOUDINARY_API_KEY) {
+  process.env.CLOUDINARY_API_KEY = process.env.CLOUDINARY_API_KEY.replace('296764586543229', VALID_API_KEY);
 }
 
+// Configurar Cloudinary con la clave correcta garantizada
+cloudinary.config(true);
 cloudinary.config({
-  cloud_name: (process.env.CLOUDINARY_CLOUD_NAME || 'hvoicb7h').trim(),
-  api_key: apiKey,
-  api_secret: (process.env.CLOUDINARY_API_SECRET || 'PjrI6SwHn6CAb5Dmsfh26m5wzlg').trim(),
+  cloud_name: CLOUD_NAME,
+  api_key: VALID_API_KEY,
+  api_secret: API_SECRET,
   secure: true
 });
 

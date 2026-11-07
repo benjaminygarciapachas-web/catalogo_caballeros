@@ -1,10 +1,16 @@
 const cloudinary = require('cloudinary').v2;
 const fs = require('fs');
 
+let apiKey = (process.env.CLOUDINARY_API_KEY || '296764566543229').trim();
+// Corrección automática por si se configuró con la errata (8 en vez de 6)
+if (apiKey === '296764586543229') {
+  apiKey = '296764566543229';
+}
+
 cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME || 'hvoicb7h',
-  api_key: process.env.CLOUDINARY_API_KEY || '296764566543229',
-  api_secret: process.env.CLOUDINARY_API_SECRET || 'PjrI6SwHn6CAb5Dmsfh26m5wzlg',
+  cloud_name: (process.env.CLOUDINARY_CLOUD_NAME || 'hvoicb7h').trim(),
+  api_key: apiKey,
+  api_secret: (process.env.CLOUDINARY_API_SECRET || 'PjrI6SwHn6CAb5Dmsfh26m5wzlg').trim(),
   secure: true
 });
 
